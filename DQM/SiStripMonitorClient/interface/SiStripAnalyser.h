@@ -10,6 +10,7 @@
  *   
  */
 
+#include "FWCore/Utilities/interface/EDGetToken.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Framework/interface/ESHandle.h"
@@ -30,6 +31,7 @@ class SiStripFedCabling;
 class SiStripDetCabling;
 class SiStripActionExecutor;
 class SiStripClassToMonitorCondData;
+class FEDRawDataCollection;
 class SiStripAnalyser: public edm::EDAnalyzer, public evf::ModuleWeb{
 
 public:
@@ -85,7 +87,9 @@ private:
   int staticUpdateFrequency_;
   int globalStatusFilling_;
   int shiftReportFrequency_;
+
   edm::InputTag rawDataTag_;
+  edm::EDGetTokenT<FEDRawDataCollection> rawDataToken_;
 
   std::string outputFilePath_;
   std::string outputFileName_;
