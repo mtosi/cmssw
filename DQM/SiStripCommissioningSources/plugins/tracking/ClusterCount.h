@@ -24,6 +24,7 @@
 #include <memory>
 
 // user include files
+#include "FWCore/Utilities/interface/EDGetToken.h"
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
 
@@ -54,7 +55,8 @@ class ClusterCount : public edm::EDAnalyzer {
       virtual void analyze(const edm::Event&, const edm::EventSetup&);
 
       // ----------member data ---------------------------
-      edm::InputTag clusterLabel_;
+      //      edm::InputTag clusterLabel_;
+      edm::EDGetTokenT<edm::DetSetVector<SiStripCluster> > clusterToken_;
 
 };
 
