@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <cassert>
 
+#include "FWCore/Utilities/interface/EDGetToken.h"
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
 #include "FWCore/Framework/interface/Event.h"
@@ -84,6 +85,9 @@ class SiStripFEDMonitorPlugin : public edm::EDAnalyzer
 
   //tag of FEDRawData collection
   edm::InputTag rawDataTag_;
+  edm::EDGetTokenT<FEDRawDataCollection> rawDataToken_;
+  edm::EDGetTokenT<EventWithHistory> heToken_;
+  
   //histogram helper class
   FEDHistograms fedHists_;
   //folder name for histograms in DQMStore
@@ -135,6 +139,9 @@ SiStripFEDMonitorPlugin::SiStripFEDMonitorPlugin(const edm::ParameterSet& iConfi
     cablingCacheId_(0),
     maxFedBufferSize_(0)
 {
+  rawDataToken_ = consumes<FEDRawDataCollection>(rawDataTag_);
+  heToken_      = consumes<EventWithHistory>(edm::InputTag("consecutiveHEs") );
+
   //print config to debug log
   std::ostringstream debugStream;
   if (printDebug_>1) {
@@ -198,7 +205,8 @@ SiStripFEDMonitorPlugin::analyze(const edm::Event& iEvent,
   
   //get raw data
   edm::Handle<FEDRawDataCollection> rawDataCollectionHandle;
-  iEvent.getByLabel(rawDataTag_,rawDataCollectionHandle);
+  //  iEvent.getByLabel(rawDataTag_,rawDataCollectionHandle);
+  iEvent.getByToken(rawDataToken_,rawDataCollectionHandle);
   const FEDRawDataCollection& rawDataCollection = *rawDataCollectionHandle;
   
   fedErrors_.initialiseEvent();
@@ -206,7 +214,8 @@ SiStripFEDMonitorPlugin::analyze(const edm::Event& iEvent,
   //add the deltaBX value if the product exist
 
   edm::Handle<EventWithHistory> he;
-  iEvent.getByLabel("consecutiveHEs",he);
+  //  iEvent.getByLabel("consecutiveHEs",he);
+  iEvent.getByToken(heToken_,he);
 
   if(he.isValid() && !he.failedToGet()) {
     fedErrors_.fillEventProperties(he->deltaBX());
