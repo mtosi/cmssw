@@ -23,6 +23,7 @@
 #include <memory>
 
 // user include files
+#include "FWCore/Utilities/interface/EDGetToken.h"
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
 #include "FWCore/Framework/interface/ESHandle.h"
@@ -65,6 +66,7 @@ class SiStripMonitorPedestals : public edm::EDAnalyzer {
 
    
  private:
+  edm::EDGetTokenT<edm::DetSetVector<SiStripRawDigi> > digiToken_;
 
   void resetMEs(uint32_t idet);
   void createMEs(edm::EventSetup const& eSetup);

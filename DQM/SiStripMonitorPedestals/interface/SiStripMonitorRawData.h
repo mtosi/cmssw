@@ -23,6 +23,7 @@
 #include <memory>
 
 // user include files
+#include "FWCore/Utilities/interface/EDGetToken.h"
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
 #include "FWCore/Framework/interface/ESHandle.h"
@@ -54,6 +55,8 @@ class SiStripMonitorRawData : public edm::EDAnalyzer {
   
   
  private:
+  edm::EDGetTokenT<edm::DetSetVector<SiStripRawDigi> > digiToken_;
+
   MonitorElement* BadFedNumber;
   
   DQMStore* dqmStore_;
