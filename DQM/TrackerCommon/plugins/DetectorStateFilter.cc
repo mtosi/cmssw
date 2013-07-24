@@ -18,6 +18,8 @@ DetectorStateFilter::DetectorStateFilter( const edm::ParameterSet & pset ) {
    detectorType_   = pset.getUntrackedParameter<std::string>( "DetectorType", "sistrip");
    dcsStatusLabel_ = pset.getUntrackedParameter<edm::InputTag>( "DcsStatusLabel", edm::InputTag("scalersRawToDigi") );
 
+   dcsStatusToken_ = consumes<DcsStatusCollection>(dcsStatusLabel_);
+
    nEvents_         = 0;
    nSelectedEvents_ = 0;
    detectorOn_  = false;
@@ -34,7 +36,8 @@ bool DetectorStateFilter::filter( edm::Event & evt, edm::EventSetup const& es) {
   // Check Detector state Only for Real Data and return true for MC
   if (evt.isRealData()) {
     edm::Handle<DcsStatusCollection> dcsStatus;
-    evt.getByLabel(dcsStatusLabel_, dcsStatus);
+    //    evt.getByLabel(dcsStatusLabel_, dcsStatus);
+    evt.getByToken(dcsStatusToken_, dcsStatus);
     if (dcsStatus.isValid()) {
       if (detectorType_ == "pixel" && dcsStatus->size() > 0 ) {
 	  if ((*dcsStatus)[0].ready(DcsStatus::BPIX) && 

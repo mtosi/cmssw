@@ -1,8 +1,11 @@
 #ifndef DetectorStateFilter_H
 #define DetectorStateFilter_H
 
+#include "FWCore/Utilities/interface/EDGetToken.h"
 #include "FWCore/Framework/interface/EDFilter.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
+
+#include "DataFormats/Scalers/interface/DcsStatus.h"
  
 class DetectorStateFilter : public edm::EDFilter {
  public:
@@ -10,6 +13,8 @@ class DetectorStateFilter : public edm::EDFilter {
  ~DetectorStateFilter();
   private:
   bool filter( edm::Event &, edm::EventSetup const& );
+
+  edm::EDGetTokenT<DcsStatusCollection> dcsStatusToken_;
 
   uint64_t nEvents_, nSelectedEvents_;
   bool verbose_;
