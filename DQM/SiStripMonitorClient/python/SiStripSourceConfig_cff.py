@@ -63,30 +63,10 @@ MonitorTrackResidualsColl.trajectoryInput     = 'generalTracks'
 MonitorTrackResidualsColl.OutputMEsInRootFile = False
 
 
-# Tracking Monitor ####
-# Clone for Sim Data
-import DQM.TrackingMonitor.TrackingMonitor_cfi
-TrackMonSim = DQM.TrackingMonitor.TrackingMonitor_cfi.TrackMon.clone()
-TrackMonSim.FolderName = 'Tracking/TrackParameters'
-# Clone for Real Data (Cosmic)
-import DQM.TrackingMonitor.TrackerCosmicsTrackingMonitor_cfi
-TrackMonReal = DQM.TrackingMonitor.TrackerCosmicsTrackingMonitor_cfi.TrackerCosmicTrackMon.clone()
-TrackMonReal.TrackProducer = 'ctfWithMaterialTracksP5'
-TrackMonReal.FolderName = 'Tracking/TrackParameters'
-TrackMonReal.AlgoName = 'CKFTk'
-TrackMonReal.doSeedParameterHistos = True
-
-# Clone for Real Data (Collison)
-import DQM.TrackingMonitor.TrackingMonitor_cfi
-TrackMonColl = DQM.TrackingMonitor.TrackingMonitor_cfi.TrackMon.clone()
-TrackMonColl.TrackProducer = 'generalTracks'
-TrackMonColl.FolderName = 'Tracking/TrackParameters'
-TrackMonColl.AlgoName = 'CKFTk'
-TrackMonColl.doSeedParameterHistos = True
 # Sequences
-SiStripSourcesSimData = cms.Sequence(SiStripMonitorDigi*SiStripMonitorCluster*SiStripMonitorTrackSim*MonitorTrackResidualsSim*TrackMonSim)
-SiStripSourcesRealData = cms.Sequence(SiStripMonitorDigi*SiStripMonitorCluster*SiStripMonitorTrackReal*MonitorTrackResidualsReal*TrackMonReal)
-SiStripSourcesRealDataCollision = cms.Sequence(SiStripMonitorDigi*SiStripMonitorCluster*SiStripMonitorTrackColl*MonitorTrackResidualsColl*TrackMonColl)
+SiStripSourcesSimData = cms.Sequence(SiStripMonitorDigi*SiStripMonitorCluster*SiStripMonitorTrackSim*MonitorTrackResidualsSim)
+SiStripSourcesRealData = cms.Sequence(SiStripMonitorDigi*SiStripMonitorCluster*SiStripMonitorTrackReal*MonitorTrackResidualsReal)
+SiStripSourcesRealDataCollision = cms.Sequence(SiStripMonitorDigi*SiStripMonitorCluster*SiStripMonitorTrackColl*MonitorTrackResidualsColl)
 
 
 

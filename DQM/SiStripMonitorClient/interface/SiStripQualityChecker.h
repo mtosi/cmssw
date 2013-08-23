@@ -44,15 +44,7 @@ class SiStripQualityChecker {
     std::string     detectorTag;
   };
 
-  struct TrackingMEs{
-    std::string     HistoName;
-    MonitorElement* TrackingFlag;
-    float           LowerCut;
-    float           UpperCut; 
-  };
-
   void fillDetectorStatus(DQMStore* dqm_store, const edm::ESHandle< SiStripDetCabling >& cabling);
-  void fillTrackingStatus(DQMStore* dqm_store);
   void fillSubDetStatus(DQMStore* dqm_store,const edm::ESHandle< SiStripDetCabling >& cabling, SubDetMEs& mes, unsigned int xbin,float& gflag);
   void getModuleStatus(DQMStore* dqm_store, std::vector<MonitorElement*>& layer_mes, int& errdet);
 
@@ -60,11 +52,9 @@ class SiStripQualityChecker {
   void initialiseBadModuleList();  
 
   void fillDetectorStatusAtLumi(DQMStore* dqm_store);
-  void fillTrackingStatusAtLumi(DQMStore* dqm_store);
   
   std::map<std::string, SubDetMEs> SubDetMEsMap;
   std::map<std::string, std::string> SubDetFolderMap;
-  std::map<std::string, TrackingMEs> TrackingMEsMap;
   
   MonitorElement* DetFractionReportMap;
   MonitorElement* SToNReportMap;
@@ -72,24 +62,14 @@ class SiStripQualityChecker {
 
   MonitorElement* SummaryReportGlobal;
 
-  MonitorElement* TrackSummaryReportMap;
-
-  MonitorElement* TrackSummaryReportGlobal;
-
   std::map<uint32_t,uint16_t> badModuleList;
  
   edm::ParameterSet pSet_;
 
   bool bookedStripStatus_;
-  bool bookedTrackingStatus_;
   int globalStatusFilling_;
-  bool useGoodTracks_;
 
   TkDetMap* tkDetMap_;
  
-  float cutoffTrackRate_;
-  float cutoffChi2overDoF_;
-  float cutoffRecHits_;
-
 };
 #endif
