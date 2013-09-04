@@ -26,16 +26,6 @@ for tracks in selectedTracks :
     locals()[label].setLabel(label)
 
 
-### define the sequence w/ all the EDAnalyzers
-TrackerCollisionSelectedTrackMonCommonSequence = cms.Sequence()
-TrackerCollisionSelectedTrackMonMBSequence     = cms.Sequence()
-for tracks in selectedTracks :
-    label = 'TrackerCollisionSelectedTrackMonCommon' + str(tracks)
-    TrackerCollisionSelectedTrackMonCommonSequence+=cms.Sequence(locals()[label])
-    label = 'TrackerCollisionSelectedTrackMonMB' + str(tracks)
-    TrackerCollisionSelectedTrackMonMBSequence+=cms.Sequence(locals()[label])
-    
-    
 #-------------------------------------------------
 # Tracking Monitor 
 #-------------------------------------------------
@@ -59,11 +49,6 @@ for step in selectedIterTrackingStep :
     elif clusterLabel[step] == cms.vstring('Strip') or clusterLabel[step] == cms.vstring('Tot') :
         locals()[label].NClusStrBin = clusterBin[step]
         locals()[label].NClusStrMax = clusterMax[step]
-
-seedingMonitorSequence = cms.Sequence()
-for step in selectedIterTrackingStep :
-    label = 'TrackSeedMon'+str(step)
-    seedingMonitorSequence+=cms.Sequence(locals()[label])
 
 # DQM Services
 dqmInfoTracking = cms.EDAnalyzer("DQMEventInfo",
@@ -92,15 +77,6 @@ for module in selectedModules :
     locals()[label].categories     = categories[module]
     locals()[label].setLabel(label)
 
-logMessageMonCommonSequence = cms.Sequence()
-logMessageMonMBSequence     = cms.Sequence()
-for module in selectedModules :
-    label = str(module)+'LogMessageMonCommon'
-    logMessageMonCommonSequence+=cms.Sequence(locals()[label])
-    label = str(module)+'LogMessageMonMB'
-    logMessageMonMBSequence+=cms.Sequence(locals()[label])
-
-
 # dEdx monitor ####
 ### load which dedx
 from DQM.TrackingMonitorSource.dedxHarmonic2monitor_cfi import *
@@ -123,54 +99,85 @@ trackingDQMgoodOfflinePrimaryVertices.filterParams = pvSelector.clone( minNdof =
 trackingDQMgoodOfflinePrimaryVertices.src=cms.InputTag('offlinePrimaryVertices')
 trackingDQMgoodOfflinePrimaryVertices.filter = cms.bool(False)
 
-# Sequence
-TrackingDQMSourceTier0 = cms.Sequence(
-    # dEdx monitoring
-    dedxHarmonicSequence * dEdxMonCommon    
-#    # temporary patch in order to have BXlumi
-#    * lumiProducer
-    # temporary test in order to have the "goodPrimaryVertexCollection"
-    ## monitor track collections
-    * selectedTracks2runSequence * TrackerCollisionSelectedTrackMonCommonSequence
-    # seeding monitoring
-    * seedingMonitorSequence
-#    *TrackMonStep0*TrackMonStep1*TrackMonStep2*TrackMonStep3*TrackMonStep4*TrackMonStep5*TrackMonStep6*TrackMonStep9*TrackMonStep10
-     # MessageLog
-    * logMessageMonCommonSequence
-#    * LocalRecoLogMessageMonCommon * ClusterizerLogMessageMonCommon * SeedingLogMessageMonCommon * TrackCandidateLogMessageMonCommon * TrackFinderLogMessageMonCommon
-    *dqmInfoTracking)
+
+############################################################################################################
+############################################################################################################
 
 
-TrackingDQMSourceTier0Common = cms.Sequence(
-    # dEdx monitoring
-    dedxHarmonicSequence * dEdxMonCommon    
-#    # temporary patch in order to have BXlumi
-#    * lumiProducer
-#    # temporary test in order to have the "goodPrimaryVertexCollection"
-#    * trackingDQMgoodOfflinePrimaryVertices
-      ## monitor track collections
-    * selectedTracks2runSequence * TrackerCollisionSelectedTrackMonCommonSequence
-      # seeding monitoring
-    * seedingMonitorSequence
-#      *TrackMonStep0*TrackMonStep1*TrackMonStep2*TrackMonStep3*TrackMonStep4*TrackMonStep5*TrackMonStep6*TrackMonStep9*TrackMonStep10
-    # MessageLog
-      * logMessageMonCommonSequence
-#    * LocalRecoLogMessageMonCommon * ClusterizerLogMessageMonCommon * SeedingLogMessageMonCommon * TrackCandidateLogMessageMonCommon * TrackFinderLogMessageMonCommon
-    *dqmInfoTracking)
+# tracking monitor Sequence: VALIDATION
+TrackingDQMSourceTier0 = cms.Sequence()
+# dEdx monitoring
+TrackingDQMSourceTier0+=(dedxHarmonicSequence * dEdxMonCommon)
+## temporary patch in order to have BXlumi
+#TrackingDQMSourceTier0+=(lumiProducer)
+## temporary test in order to have the "goodPrimaryVertexCollection"
+#TrackingDQMSourceTier0+=(trackingDQMgoodOfflinePrimaryVertices)
+## monitor track collections
+for tracks in selectedTracks :
+    if tracks != 'generalTracks':
+        TrackingDQMSourceTier0+=sequenceName[tracks]
+    label = 'TrackerCollisionSelectedTrackMonCommon' + str(tracks)
+    TrackingDQMSourceTier0+=(locals()[label])
+# seeding monitoring
+for step in selectedIterTrackingStep :
+    label = 'TrackSeedMon'+str(step)
+    TrackingDQMSourceTier0+=(locals()[label])
+# MessageLog
+for module in selectedModules :
+    label = str(module)+'LogMessageMonCommon'
+    TrackingDQMSourceTier0+=cms.Sequence(locals()[label])
+TrackingDQMSourceTier0+=(dqmInfoTracking)
+############################################################################################################
 
-TrackingDQMSourceTier0MinBias = cms.Sequence(
-    # dEdx monitoring
-    dedxHarmonicSequence * dEdxMonCommon    
-#    * lumiProducer
-#    # temporary test in order to have the "goodPrimaryVertexCollection"
-#    * trackingDQMgoodOfflinePrimaryVertices
-    ## monitor track collections
-    * selectedTracks2runSequence * TrackerCollisionSelectedTrackMonMBSequence
-     # seeding monitoring
-    * seedingMonitorSequence
-#    *TrackMonStep0*TrackMonStep1*TrackMonStep2*TrackMonStep3*TrackMonStep4*TrackMonStep5*TrackMonStep6*TrackMonStep9*TrackMonStep10
-    # MessageLog
-    * logMessageMonMBSequence
-#    * LocalRecoLogMessageMonMB * ClusterizerLogMessageMonMB * SeedingLogMessageMonMB * TrackCandidateLogMessageMonMB * TrackFinderLogMessageMonMB
-    *dqmInfoTracking)
+
+# tracking monitor Sequence: DQM all PD, but MiminumBias
+TrackingDQMSourceTier0Common = cms.Sequence()
+# dEdx monitoring
+TrackingDQMSourceTier0Common+=(dedxHarmonicSequence * dEdxMonCommon)
+## temporary patch in order to have BXlumi
+#TrackingDQMSourceTier0Common+=(lumiProducer)
+## temporary test in order to have the "goodPrimaryVertexCollection"
+#TrackingDQMSourceTier0Common+=(trackingDQMgoodOfflinePrimaryVertices)
+
+## monitor track collections
+for tracks in selectedTracks :
+    if tracks != 'generalTracks':
+        TrackingDQMSourceTier0Common+=sequenceName[tracks]
+    label = 'TrackerCollisionSelectedTrackMonCommon' + str(tracks)
+    TrackingDQMSourceTier0Common+=(locals()[label])
+# seeding monitoring
+for step in selectedIterTrackingStep :
+    label = 'TrackSeedMon'+str(step)
+    TrackingDQMSourceTier0Common+=(locals()[label])
+# MessageLog
+for module in selectedModules :
+    label = str(module)+'LogMessageMonCommon'
+    TrackingDQMSourceTier0Common+=(locals()[label])
+TrackingDQMSourceTier0Common+=(dqmInfoTracking)
+############################################################################################################
+
+# tracking monitor Sequence: DQM only MiminumBias PD
+TrackingDQMSourceTier0MinBias = cms.Sequence()
+# dEdx monitoring
+TrackingDQMSourceTier0MinBias+=(dedxHarmonicSequence * dEdxMonCommon)    
+## temporary patch in order to have BXlumi
+#TrackingDQMSourceTier0MinBias+=(lumiProducer)
+## temporary test in order to have the "goodPrimaryVertexCollection"
+#TrackingDQMSourceTier0MinBias+=(trackingDQMgoodOfflinePrimaryVertices)
+## monitor track collections
+for tracks in selectedTracks :
+    if tracks != 'generalTracks':
+        TrackingDQMSourceTier0MinBias+=sequenceName[tracks]
+    label = 'TrackerCollisionSelectedTrackMonMB' + str(tracks)
+    TrackingDQMSourceTier0MinBias+=(locals()[label])
+# seeding monitoring
+for step in selectedIterTrackingStep :
+    label = 'TrackSeedMon'+str(step)
+    TrackingDQMSourceTier0MinBias+=(locals()[label])
+# MessageLog
+for module in selectedModules :
+    label = str(module)+'LogMessageMonMB'
+    TrackingDQMSourceTier0MinBias+=cms.Sequence(locals()[label])
+TrackingDQMSourceTier0MinBias+=(dqmInfoTracking)
+############################################################################################################
 
