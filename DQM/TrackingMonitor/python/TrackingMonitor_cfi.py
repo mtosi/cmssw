@@ -48,9 +48,11 @@ TrackMon = cms.EDAnalyzer("TrackingMonitor",
     doAllPlots                          = cms.bool(True),
     doTrackerSpecific                   = cms.bool(False),
     doBeamSpotPlots                     = cms.bool(False),
+    doPrimaryVertexPlots                = cms.bool(False),
     doSeedParameterHistos               = cms.bool(False),
     doTrackCandHistos                   = cms.bool(False),
     doDCAPlots                          = cms.bool(False),
+    doDCAwrtPVPlots                     = cms.bool(False),
     doDCAwrt000Plots                    = cms.bool(False),
     doGeneralPropertiesPlots            = cms.bool(False),
     doHitPropertiesPlots                = cms.bool(False),              
@@ -151,35 +153,8 @@ TrackMon = cms.EDAnalyzer("TrackingMonitor",
     MeanHitMax = cms.double(29.5),
     MeanHitMin = cms.double(-0.5),
 
-    # num TOB rec hits
-    TOBHitBin = cms.int32(15),
-    TOBHitMax = cms.double(14.5),
-    TOBHitMin = cms.double(-0.5),
-
-    # num TIB rec hits
-    TIBHitBin = cms.int32(15),
-    TIBHitMax = cms.double(14.5),
-    TIBHitMin = cms.double(-0.5),
-
-    # num TID rec hits
-    TIDHitBin = cms.int32(15),
-    TIDHitMax = cms.double(14.5),
-    TIDHitMin = cms.double(-0.5),
-
-    # num TEC rec hits
-    TECHitBin = cms.int32(25),
-    TECHitMax = cms.double(24.5),
-    TECHitMin = cms.double(-0.5),
-
-    # num PXB rec hits
-    PXBHitBin = cms.int32(10),
-    PXBHitMax = cms.double(9.5),
-    PXBHitMin = cms.double(-0.5),
-
-    # num PXF rec hits
-    PXFHitBin = cms.int32(10),
-    PXFHitMax = cms.double(9.5),
-    PXFHitMin = cms.double(-0.5),
+    subdetectors = cms.vstring( "TIB", "TOB", "TID", "TEC", "PixBarrel", "PixEndcap" ),
+    subdetectorBin = cms.int32(25),
 
     # num rec hits lost
     RecLostBin = cms.int32(10),
@@ -315,6 +290,11 @@ TrackMon = cms.EDAnalyzer("TrackingMonitor",
     VZBin = cms.int32(100),
     VZMax = cms.double(30.0),                        
     VZMin = cms.double(-30.0),
+    
+    # PCA z position for profile
+    VZBinProf = cms.int32(100),
+    VZMaxProf = cms.double(0.2),                        
+    VZMinProf = cms.double(-0.2),
     
     # PCA x position for 2D plot
     X0Bin = cms.int32(100),
