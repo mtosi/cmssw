@@ -12,7 +12,6 @@
 #include "DataFormats/TrackerCommon/interface/TrackerTopology.h"
 #include "Geometry/Records/interface/IdealGeometryRecord.h"
 
-#include "DQM/SiStripCommon/interface/SiStripFolderOrganizer.h"
 #include "DQM/TrackingMonitorClient/interface/TrackingUtility.h"
 
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
