@@ -1,6 +1,8 @@
 #ifndef PrimaryVertexMonitor_H
 #define PrimaryVertexMonitor_H
 
+#include "FWCore/Utilities/interface/EDGetToken.h"
+
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
 #include "FWCore/Framework/interface/Event.h"
@@ -26,6 +28,7 @@ class PrimaryVertexMonitor : public edm::EDAnalyzer {
 
       ~PrimaryVertexMonitor();
 
+      virtual void beginRun(const edm::Run&, const edm::EventSetup&);       
       virtual void analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup);
 
   virtual void endJob();
@@ -34,7 +37,10 @@ class PrimaryVertexMonitor : public edm::EDAnalyzer {
 
   void vertexPlots(const reco::Vertex & v, const reco::BeamSpot& beamSpot, int i);
 
-  edm::InputTag moduleLabel, beamSpotLabel;
+  edm::EDGetToken<reco::VertexCollection> vertexToken_;
+  edm::EDGetToken<reco::BeamSpot>         beamspotToken_;
+  
+  edm::InputTag vertexInputTag_, beamSpotInputTag_;
 
   DQMStore * dqmStore_;
   std::string dqmLabel;
@@ -47,6 +53,16 @@ class PrimaryVertexMonitor : public edm::EDAnalyzer {
   MonitorElement *vtxchi2[2] , *vtxndf[2], *vtxprob[2] , *nans[2];
   MonitorElement *type[2];
   MonitorElement *bsX, *bsY, *bsZ, *bsSigmaZ, *bsDxdz, *bsDydz, *bsBeamWidthX, *bsBeamWidthY, *bsType;
+
+  MonitorElement *sumpt, *ntracks, *weight, *chi2ndf, *chi2prob;
+  MonitorElement *dxy, *dz, *dxyErr, *dzErr;
+  MonitorElement *dxyVsPhi, *dzVsPhi;
+  MonitorElement *dxyVsEta, *dzVsEta;
+
+
+  std::string TopFolderName_;
+  std::string AlignmentLabel_;
+
 };
 
 
