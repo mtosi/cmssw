@@ -76,6 +76,8 @@ class TrackingMonitor : public edm::EDAnalyzer
 	edm::EDGetTokenT<reco::BeamSpot> bsSrcToken_;
 	edm::EDGetTokenT<reco::VertexCollection> pvSrcToken_;
 
+	edm::EDGetTokenT<reco::TrackCollection> allTrackToken_;
+
 	edm::EDGetTokenT<reco::TrackCollection> trackToken_;
 	edm::EDGetTokenT<TrackCandidateCollection> trackCandidateToken_;
 	edm::EDGetTokenT<edm::View<TrajectorySeed> > seedToken_;
@@ -100,7 +102,6 @@ class TrackingMonitor : public edm::EDAnalyzer
         MonitorElement * NumberOfMeanLayersPerTrack;  
 
 	// Good Tracks 
-        MonitorElement * NumberOfGoodTracks;
         MonitorElement * FractionOfGoodTracks;
 
         // Track Seeds 
@@ -113,34 +114,22 @@ class TrackingMonitor : public edm::EDAnalyzer
         MonitorElement * NumberOfTrackCandidates;
 
         // Cluster Properties
-	/*
-        MonitorElement* NumberOfPixelClus;
-        MonitorElement* NumberOfStripClus;
-        MonitorElement* RatioOfPixelAndStripClus;
-	*/
 	std::vector<MonitorElement*> NumberOfTrkVsClusters;
         MonitorElement* NumberOfTrkVsClus;
         MonitorElement* NumberOfTrkVsStripClus;
         MonitorElement* NumberOfTrkVsPixelClus;
-        MonitorElement* NumberOfGoodTrkVsClus;
 
 	// Monitoring vs LS
 	MonitorElement* NumberOfTracksVsLS;
-	MonitorElement* NumberOfGoodTracksVsLS;
 	MonitorElement* GoodTracksFractionVsLS;
-	MonitorElement* GoodTracksNumberOfRecHitsPerTrackVsLS;
+	MonitorElement* NumberOfRecHitsPerTrackVsLS;
 
 	// Monitoring PU
 	MonitorElement* NumberOfTracksVsGoodPVtx;
 	MonitorElement* NumberOfTracksVsBXlumi;
-	MonitorElement* NumberOfGoodTracksVsGoodPVtx;
-	MonitorElement* NumberOfGoodTracksVsBXlumi;
-	MonitorElement* FractionOfGoodTracksVsGoodPVtx;
-	MonitorElement* FractionOfGoodTracksVsBXlumi;
-	
+
 	// add in order to deal with LS transitions
         MonitorElement * NumberOfTracks_lumiFlag;
-        MonitorElement * NumberOfGoodTracks_lumiFlag;
 
         std::string builderName;
         edm::ESHandle<TransientTrackingRecHitBuilder> theTTRHBuilder;
@@ -158,10 +147,10 @@ class TrackingMonitor : public edm::EDAnalyzer
 	bool doSeedVsClusterPlot;
 	bool runTrackBuildingAnalyzerForSeed;
 	// ADD by Mia in order to have GoodTrack plots only for collision
-	bool doGoodTrackPlots_;
 	bool doPUmonitoring_;
 	bool doPlotsVsBXlumi_;
 	bool doPlotsVsGoodPVtx_;
+	bool doFractionPlot_;
 
         GenericTriggerEventFlag* genTriggerEventFlag_;
 };
