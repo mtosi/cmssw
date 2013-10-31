@@ -3,20 +3,23 @@
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/Utilities/interface/isFinite.h"
 
-#include "DataFormats/VertexReco/interface/VertexFwd.h"
+
 #include "CommonTools/Statistics/interface/ChiSquaredProbability.h"
 
 #include "FWCore/MessageLogger/interface/MessageLogger.h"     
+
+#include "TMath.h"
 
 using namespace reco;
 using namespace edm;
 
 PrimaryVertexMonitor::PrimaryVertexMonitor(const edm::ParameterSet& pSet)
-  : 
-  TopFolderName_ (pSet.getParameter<std::string>("TopFolderName") )
-  AlignmentLabel_(pSet.getParameter<std::string>("AlignmentLabel"))
+  : conf_          ( pSet )
+  , dqmStore_      ( edm::Service<DQMStore>().operator->() )
+  , TopFolderName_ ( pSet.getParameter<std::string>("TopFolderName") )
+  , AlignmentLabel_( pSet.getParameter<std::string>("AlignmentLabel"))
 {
-  dqmStore_ = edm::Service<DQMStore>().operator->();
+  //  dqmStore_ = edm::Service<DQMStore>().operator->();
 
 
   vertexInputTag_   = pSet.getParameter<InputTag>("vertexLabel");
@@ -117,6 +120,27 @@ PrimaryVertexMonitor::beginRun(const edm::Run& iRun, const edm::EventSetup& iSet
   dqmLabel = TopFolderName_+"/"+AlignmentLabel_;
   dqmStore_->setCurrentFolder(dqmLabel);
 
+  int    TKNoBin    = conf_.getParameter<int>(   "TkSizeBin");
+  double TKNoMin    = conf_.getParameter<double>("TkSizeMin");
+  double TKNoMax    = conf_.getParameter<double>("TkSizeMax");
+
+  int    DxyBin     = conf_.getParameter<int>(   "DxyBin");
+  double DxyMin     = conf_.getParameter<double>("DxyMin");
+  double DxyMax     = conf_.getParameter<double>("DxyMax");
+  
+  int    DzBin      = conf_.getParameter<int>(   "DzBin");
+  double DzMin      = conf_.getParameter<double>("DzMin");
+  double DzMax      = conf_.getParameter<double>("DzMax");
+  
+  int    PhiBin     = conf_.getParameter<int>(   "PhiBin");
+  double PhiMin     = conf_.getParameter<double>("PhiMin");
+  double PhiMax     = conf_.getParameter<double>("PhiMax");
+
+  int    EtaBin     = conf_.getParameter<int>(   "EtaBin");
+  double EtaMin     = conf_.getParameter<double>("EtaMin");
+  double EtaMax     = conf_.getParameter<double>("EtaMax");
+  
+      
   ntracks = dqmStore_->book1D("ntracks","number of PV tracks (p_{T} > 1 GeV)", 3*TKNoBin, TKNoMin, (TKNoMax+0.5)*3.-0.5);
   ntracks->setAxisTitle("Number of PV Tracks (p_{T} > 1 GeV) per Event", 1);
   ntracks->setAxisTitle("Number of Event", 2);
@@ -208,32 +232,32 @@ PrimaryVertexMonitor::pvTracksPlots(const Vertex & v)
   if (v.isFake()  ) return;
   
   size_t nTracks = 0;
-  double sumPT = 0.;
+  float sumPT = 0.;
   for(reco::Vertex::trackRef_iterator t = v.tracks_begin(); 
       t!=v.tracks_end(); ++t) {
 
-    if ( !t->quality(reco::TrackBase::highPurity) ) continue;
-    if ( t->pt() < 1. ) continue;
+    if ( !(**t).quality(reco::TrackBase::highPurity) ) continue;
+    if ( (**t).pt() < 1. ) continue;
 
 
     ntracks++;
 
-    double pt       = t->pt();
-    double eta      = t->eta();
-    double phi      = t->phi();
+    float pt       = (**t).pt();
+    float eta      = (**t).eta();
+    float phi      = (**t).phi();
 
-    double weight   = v.trackWeight(*t);
-    double chi2NDF  = t->normalizedChi2();
-    double chi2Prob = TMath::Prob(t->chi2(),(int)t->ndof());
-    double Dxy      = t->dxy(v.position());
-    double Dz       = t->dz(v.position());
-    double DxyErr   = t->dxyError();
-    double DzErr    = t->dzError();
+    float w        = v.trackWeight(*t);
+    float chi2NDF  = (**t).normalizedChi2();
+    float chi2Prob = TMath::Prob((**t).chi2(),(int)(**t).ndof());
+    float Dxy      = (**t).dxy(v.position());
+    float Dz       = (**t).dz(v.position());
+    float DxyErr   = (**t).dxyError();
+    float DzErr    = (**t).dzError();
 
-    sumPT += pt**2;
+    sumPT += pt*pt;
 
     // fill MEs
-    weight   -> Fill (weight);
+    weight   -> Fill (w);
     chi2ndf  -> Fill (chi2NDF);
     chi2prob -> Fill (chi2Prob);
     dxy      -> Fill (Dxy);
@@ -247,7 +271,7 @@ PrimaryVertexMonitor::pvTracksPlots(const Vertex & v)
     dzVsEta  -> Fill (Dz, eta);
   }
   ntracks -> Fill (nTracks);
-  sumpt   -> Fill (sumPT)
+  sumpt   -> Fill (sumPT);
 }
 
 void PrimaryVertexMonitor::vertexPlots(const Vertex & v, const BeamSpot& beamSpot, int i)

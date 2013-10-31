@@ -14,6 +14,7 @@
 #include "DQMServices/Core/interface/MonitorElement.h"
 
 #include "DataFormats/VertexReco/interface/Vertex.h"
+#include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "DataFormats/BeamSpot/interface/BeamSpot.h"
 
 
@@ -35,12 +36,15 @@ class PrimaryVertexMonitor : public edm::EDAnalyzer {
 
    private:
 
+  void pvTracksPlots(const reco::Vertex & v);
   void vertexPlots(const reco::Vertex & v, const reco::BeamSpot& beamSpot, int i);
 
-  edm::EDGetToken<reco::VertexCollection> vertexToken_;
-  edm::EDGetToken<reco::BeamSpot>         beamspotToken_;
+  edm::EDGetTokenT<reco::VertexCollection> vertexToken_;
+  edm::EDGetTokenT<reco::BeamSpot>         beamspotToken_;
   
   edm::InputTag vertexInputTag_, beamSpotInputTag_;
+
+  edm::ParameterSet conf_;
 
   DQMStore * dqmStore_;
   std::string dqmLabel;
