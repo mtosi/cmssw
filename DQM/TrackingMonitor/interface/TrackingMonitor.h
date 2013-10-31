@@ -68,6 +68,7 @@ class TrackingMonitor : public edm::EDAnalyzer
         std::string histname;  //for naming the histograms according to algorithm used
 
         DQMStore * dqmStore_;
+
         edm::ParameterSet conf_;
 
         // the track analyzer
