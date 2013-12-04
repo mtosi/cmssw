@@ -54,10 +54,10 @@ from DQMOffline.Trigger.JetMETHLTOfflineAnalyzer_cff import *
 # Inclusive VBF
 from DQMOffline.Trigger.HLTInclusiveVBFSource_cfi import *
 
-import DQM.TrackingMonitor.TrackerCollisionTrackingMonitor_cfi
-TrackerCollisionTrackMonHLT = DQM.TrackingMonitor.TrackerCollisionTrackingMonitor_cfi.TrackerCollisionTrackMon.clone()
-TrackerCollisionTrackMonHLT.FolderName    = 'HLT/Tracking'
-TrackerCollisionTrackMonHLT.TrackProducer    = 'hltPixelTracks'
+## Tracking
+
+## SiStrip
+from DQMOffline.Trigger.SiStrip_OfflineMonitoring_cff import *
 
 import DQMServices.Components.DQMEnvironment_cfi
 dqmEnvHLT= DQMServices.Components.DQMEnvironment_cfi.dqmEnv.clone()
@@ -69,6 +69,7 @@ dqmEnvHLT.subSystemFolder = 'HLT'
 # remove quadJetAna
 offlineHLTSource = cms.Sequence(
     hltResults *
+    sistripHLTofflineMonSequence *
     egHLTOffDQMSource *
     muonFullOfflineDQM *
     HLTTauDQMOffline *
@@ -76,7 +77,7 @@ offlineHLTSource = cms.Sequence(
     jetMETHLTOfflineAnalyzer *
     #TnPEfficiency *
     hltInclusiveVBFSource *
-    TrackerCollisionTrackMonHLT *
+    pixelTrackMonHLT * # it should be move to  trackingHLTofflineMonSequence *
     dqmEnvHLT)
 
 #triggerOfflineDQMSource =  cms.Sequence(onlineHLTSource*offlineHLTSource)
