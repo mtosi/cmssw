@@ -1,6 +1,8 @@
 #ifndef EventFilter_SiStripRawToDigi_SiStripClustersDSVBuilder_H
 #define EventFilter_SiStripRawToDigi_SiStripClustersDSVBuilder_H
 
+#include "FWCore/Utilities/interface/EDGetToken.h"
+
 #include "FWCore/Framework/interface/EDProducer.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/EventSetup.h"
@@ -42,6 +44,9 @@ class SiStripClustersDSVBuilder : public edm::EDProducer {
   void clusterize(const LazyGetter&, const RefGetter&, DSVnew&);
 
   /// Input labels
+
+  edm::EDGetTokenT<LazyGetter> lazyGetterToken_;
+  edm::EDGetTokenT<RefGetter>  refGetterToken_;
 
   edm::InputTag siStripLazyGetter_;
   edm::InputTag siStripRefGetter_;

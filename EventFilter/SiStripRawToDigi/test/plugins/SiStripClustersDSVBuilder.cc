@@ -8,11 +8,13 @@ using namespace std;
 using namespace sistrip;
 
 SiStripClustersDSVBuilder::SiStripClustersDSVBuilder( const edm::ParameterSet& conf ) :
-
-  siStripLazyGetter_(conf.getParameter<edm::InputTag>("SiStripLazyGetter")),
-  siStripRefGetter_(conf.getParameter<edm::InputTag>("SiStripRefGetter")),
   dsvnew_(conf.getUntrackedParameter<bool>("DetSetVectorNew",true))
 {
+  edm::InputTag siStripLazyGetter = conf.getParameter<edm::InputTag>("SiStripLazyGetter");
+  edm::InputTag siStripRefGetter  = conf.getParameter<edm::InputTag>("SiStripRefGetter");
+
+  lazyGetterToken_ = consumes<LazyGetter>(siStripLazyGetter_);
+  refGetterToken_  = consumes<RefGetter> (siStripRefGetter_ );
   if (dsvnew_) produces< DSVnew >(); else produces< DSV >();
 }
 
@@ -33,12 +35,11 @@ void SiStripClustersDSVBuilder::produce( edm::Event& event,const edm::EventSetup
   /// Retrieve LazyGetter from event
 
   edm::Handle< LazyGetter > lazygetter;
-  event.getByLabel(siStripLazyGetter_, lazygetter);
+  event.getByToken(lazyGetterToken_, lazygetter);
 
   /// Retrieve RefGetter with demand from event
-
   edm::Handle< RefGetter > refgetter;
-  event.getByLabel(siStripRefGetter_,refgetter);
+  event.getByToken(refGetterToken_, refgetter);
 
   /// create DSV product
  
@@ -59,6 +60,7 @@ void SiStripClustersDSVBuilder::produce( edm::Event& event,const edm::EventSetup
 
 void SiStripClustersDSVBuilder::clusterize(const LazyGetter& lazygetter, const RefGetter& refgetter, DSV& dsv)
 {
+
   RefGetter::const_iterator iregion = refgetter.begin();
   for(;iregion!=refgetter.end();++iregion) {
     vector<SiStripCluster>::const_iterator icluster = lazygetter.begin_record()+iregion->start();
@@ -71,6 +73,7 @@ void SiStripClustersDSVBuilder::clusterize(const LazyGetter& lazygetter, const R
 
 void SiStripClustersDSVBuilder::clusterize(const LazyGetter& lazygetter, const RefGetter& refgetter, DSVnew& dsv)
 {
+  
   /// create filler cache
 
   DSVnew::FastFiller* filler = NULL;
