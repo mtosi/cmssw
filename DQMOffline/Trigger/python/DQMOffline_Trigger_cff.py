@@ -55,6 +55,7 @@ from DQMOffline.Trigger.JetMETHLTOfflineAnalyzer_cff import *
 from DQMOffline.Trigger.HLTInclusiveVBFSource_cfi import *
 
 ## Tracking
+from DQMOffline.Trigger.Tracking_OfflineMonitoring_cff import *
 
 ## SiStrip
 from DQMOffline.Trigger.SiStrip_OfflineMonitoring_cff import *
