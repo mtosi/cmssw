@@ -21,7 +21,7 @@ namespace reco{
   typedef edm::AssociationMap<edm::OneToManyWithQualityGeneric 
     <edm::View<reco::Track>, edm::View<reco::Track>, double> >
     RecoToRecoCollection;  
-  
+
 }
 
 #endif
