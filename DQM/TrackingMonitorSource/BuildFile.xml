@@ -5,6 +5,13 @@
 <use   name="DataFormats/RecoCandidate"/>
 <use   name="DataFormats/TrackCandidate"/>
 <use   name="DataFormats/TrajectorySeed"/>
+<use   name="MagneticField/Engine"/>
+<use   name="MagneticField/Records"/>
+<use   name="Geometry/Records"/>
+<use   name="Geometry/TrackerGeometryBuilder"/>
+<use   name="Geometry/TrackerNumberingBuilder"/>
+<use   name="TrackingTools/GeomPropagators"/>
+<use   name="TrackingTools/PatternTools"/>
 <use   name="boost"/>
 <use   name="root"/>
 <use   name="rootrflx"/>
