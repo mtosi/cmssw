@@ -18,6 +18,10 @@ namespace reco{
     <edm::View<reco::Track>, TrackingParticleCollection, double> >
     RecoToSimCollection;  
   
+  typedef edm::AssociationMap<edm::OneToManyWithQualityGeneric 
+    <edm::View<reco::Track>, edm::View<reco::Track>, double> >
+    RecoToRecoCollection;  
+  
 }
 
 #endif
