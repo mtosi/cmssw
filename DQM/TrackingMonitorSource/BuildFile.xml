@@ -12,6 +12,7 @@
 <use   name="Geometry/TrackerNumberingBuilder"/>
 <use   name="TrackingTools/GeomPropagators"/>
 <use   name="TrackingTools/PatternTools"/>
+<use   name="DQMServices/Core"/>
 <use   name="boost"/>
 <use   name="root"/>
 <use   name="rootrflx"/>
