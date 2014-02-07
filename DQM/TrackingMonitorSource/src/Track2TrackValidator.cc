@@ -1,174 +1,4 @@
-//
-// Original Author:  Mia Tosi
-//         Created:  Sat, 01 Feb 2014 15:47:11 GMT
-//
-//
-
-
-// system include files
-#include <memory>
-
-// user include files
-#include "FWCore/Framework/interface/Frameworkfwd.h"
-#include "FWCore/Framework/interface/EDAnalyzer.h"
-
-#include "FWCore/Framework/interface/Event.h"
-#include "FWCore/Framework/interface/MakerMacros.h"
-
-#include "FWCore/ParameterSet/interface/ParameterSet.h"
-
-#include "FWCore/Utilities/interface/EDGetToken.h"
-
-#include <DQMServices/Core/interface/DQMEDAnalyzer.h>
-
-#include "DataFormats/TrackReco/interface/TrackFwd.h"
-#include "DataFormats/VertexReco/interface/VertexFwd.h"
-
-#include "DQMServices/Core/interface/MonitorElement.h"
-#include "DQMServices/Core/interface/DQMStore.h"
-
-#include <iostream>
-#include <sstream>
-#include <string>
-
-//
-// class declaration
-//
-class DQMStore;
-namespace reco {
-  class Track;
-  class BeamSpot;
-  class Vertex;
-}
-class DQMStore;
-
-class Track2TrackValidator : public DQMEDAnalyzer {
-
-  /*
-  vector<pair<int, map<double, int> > > res
-  for j in loop_off_trk
-     map<double, int> tmp
-     for i in loop_online_trk
-       tmp[dR(j,i)] = i
-     res.push_back(make_pair<j, tmp>)
-  */     
-
-   public:
-
-  struct generalME {
-    std::string label;
-    MonitorElement *h_tracks, *h_pt, *h_eta, *h_phi, *h_dxy, *h_dz, *h_dxyWRTpv, *h_dzWRTpv, *h_charge, *h_hits;
-    MonitorElement *h_dRmin;
-    MonitorElement *h_pt_vs_eta;
-  };
-  
-  typedef std::vector<std::pair<int, std::map<double, int> > > idx2idxByDoubleColl;
-
-      explicit Track2TrackValidator(const edm::ParameterSet&);
-      ~Track2TrackValidator();
-
-      static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
-
-   protected:
-      void beginJob(const edm::EventSetup& iSetup);
-      void analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup);
-      void bookHistograms(DQMStore::IBooker & iBooker, edm::Run const & iRun, edm::EventSetup const & iSetup) override;
-      void endLuminosityBlock(const edm::LuminosityBlock& iLumi, const edm::EventSetup& iSetup);
-      void endRun(const edm::Run& iRun, const edm::EventSetup& iSetup);
-      // ----------member data ---------------------------
- protected:
-  
-  void fillMap(reco::TrackCollection tracks1, reco::TrackCollection tracks2, idx2idxByDoubleColl& map);
-
-  void initialize_parameter(const edm::ParameterSet& iConfig);
-  void bookHistos(DQMStore::IBooker & ibooker, generalME& mes, TString label, std::string & dir);
-  void book_generic_tracks_histos(DQMStore::IBooker & ibooker, generalME& mes, TString label, std::string & dir);
-
-  void fill_generic_tracks_histos(generalME& mes, reco::Track* trk, reco::BeamSpot* bs, reco::Vertex* pv);
-
-
-  DQMStore* dqmStore_;
-
-  edm::InputTag numTrackInputTag_;
-  edm::InputTag denTrackInputTag_;
-
-  //these are used by MTVGenPs
-  edm::EDGetTokenT<reco::TrackCollection> numTrackToken_;
-  edm::EDGetTokenT<reco::TrackCollection> denTrackToken_;
-  edm::EDGetTokenT<reco::BeamSpot> numbsToken_;
-  edm::EDGetTokenT<reco::BeamSpot> denbsToken_;
-  edm::EDGetTokenT<reco::VertexCollection> numpvToken_;
-  edm::EDGetTokenT<reco::VertexCollection> denpvToken_;
-
-  std::string out;
-
- private:
-  //  edm::ParameterSet conf_;
-  std::string topDirName_;
-  double dRmin_;
-
-  generalME numTracksMEs_;  
-  generalME numassTracksMEs_;  
-  generalME denTracksMEs_;  
-  generalME denassTracksMEs_;  
-
-  double minEta, maxEta;  int nintEta;  bool useFabsEta;
-  double minPt, maxPt;  int nintPt;   bool useInvPt;   bool useLogPt;
-  double minHit, maxHit;  int nintHit;
-  double minLayers, maxLayers;  int nintLayers;
-  double minPhi, maxPhi;  int nintPhi;
-  double minDxy, maxDxy;  int nintDxy;
-  double minDz, maxDz;  int nintDz;
-  double minVertpos, maxVertpos;  int nintVertpos;
-  double minZpos, maxZpos;  int nintZpos;
-  double minDeDx, maxDeDx;  int nintDeDx;
-  double minVertcount, maxVertcount;  int nintVertcount;
-
-  //
-  double ptRes_rangeMin,ptRes_rangeMax; int ptRes_nbin;
-  double phiRes_rangeMin,phiRes_rangeMax; int phiRes_nbin;
-  double cotThetaRes_rangeMin,cotThetaRes_rangeMax; int cotThetaRes_nbin;
-  double dxyRes_rangeMin,dxyRes_rangeMax; int dxyRes_nbin;
-  double dzRes_rangeMin,dzRes_rangeMax; int dzRes_nbin;
-
-
-  MonitorElement* nrec_vs_nsim;
-  MonitorElement* nrecHit_vs_nsimHit_sim2rec;
-  MonitorElement* nrecHit_vs_nsimHit_rec2sim;
-
-  //assoc hits
-  MonitorElement* h_assocFraction, h_assocSharedHit;
-
-  //pulls of track params vs eta: to be used with fitslicesytool
-  MonitorElement* pull_dxy_vs_eta, ptpull_vs_eta, dzpull_vs_eta, phipull_vs_eta, thetapull_vs_eta;
-
-  std::vector<int> totSIMeta,totRECeta,totASSeta,totASS2eta,totloopeta,totmisideta,totASS2etaSig;
-  std::vector<int> totSIMpT,totRECpT,totASSpT,totASS2pT,totlooppT,totmisidpT;
-  std::vector<int> totSIM_hit,totREC_hit,totASS_hit,totASS2_hit,totloop_hit,totmisid_hit;
-  std::vector<int> totSIM_phi,totREC_phi,totASS_phi,totASS2_phi,totloop_phi,totmisid_phi;
-  std::vector<int> totSIM_dxy,totREC_dxy,totASS_dxy,totASS2_dxy,totloop_dxy,totmisid_dxy;
-  std::vector<int> totSIM_dz,totREC_dz,totASS_dz,totASS2_dz,totloop_dz,totmisid_dz;
-
-  std::vector<int> totSIM_vertpos,totASS_vertpos,totSIM_zpos,totASS_zpos;
-  std::vector<int> totSIM_vertcount_entire,totASS_vertcount_entire,totREC_vertcount_entire,totASS2_vertcount_entire,totASS2_vertcount_entire_signal;
-  std::vector<int> totSIM_vertcount_barrel,totASS_vertcount_barrel,totREC_vertcount_barrel,totASS2_vertcount_barrel;
-  std::vector<int> totSIM_vertcount_fwdpos,totASS_vertcount_fwdpos,totREC_vertcount_fwdpos,totASS2_vertcount_fwdpos;
-  std::vector<int> totSIM_vertcount_fwdneg,totASS_vertcount_fwdneg,totREC_vertcount_fwdneg,totASS2_vertcount_fwdneg;
-  std::vector<int> totSIM_vertz_entire,totASS_vertz_entire;
-  std::vector<int> totSIM_vertz_barrel,totASS_vertz_barrel;
-  std::vector<int> totSIM_vertz_fwdpos,totASS_vertz_fwdpos;
-  std::vector<int> totSIM_vertz_fwdneg,totASS_vertz_fwdneg;
-  std::vector<int> totREC_algo;
-  std::vector<int> totREC_ootpu_entire, totASS2_ootpu_entire;
-  std::vector<int> totREC_ootpu_barrel, totASS2_ootpu_barrel;
-  std::vector<int> totREC_ootpu_fwdpos, totASS2_ootpu_fwdpos;
-  std::vector<int> totREC_ootpu_fwdneg, totASS2_ootpu_fwdneg;
-  std::vector<int> totREC_ootpu_eta_entire, totASS2_ootpu_eta_entire;
-  std::vector<int> totASS2_itpu_eta_entire, totASS2_itpu_eta_entire_signal, totASS2_itpu_vertcount_entire, totASS2_itpu_vertcount_entire_signal;
-  std::vector<int> totFOMT_eta, totFOMT_vertcount;
-  std::vector<int> totCONeta, totCONvertcount, totCONzpos;
-  
-};
+#include "DQM/TrackingMonitorSource/interface/Track2TrackValidator.h"
 
 #include "DQMServices/Core/interface/DQMStore.h"
 
@@ -209,6 +39,8 @@ Track2TrackValidator::Track2TrackValidator(const edm::ParameterSet& iConfig)
   numassTracksMEs_.label = numTrackInputTag_.label()+"_ass";
   denTracksMEs_.label    = denTrackInputTag_.label();
   denassTracksMEs_.label = denTrackInputTag_.label()+"_ass";
+
+  assTracksMEs_.label = "associate";
 }
 
 
@@ -299,6 +131,9 @@ Track2TrackValidator::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     if ( matched ) {
       fill_generic_tracks_histos(*&denassTracksMEs_,&track,&denbs,&denpv);
       (denassTracksMEs_.h_dRmin)->Fill(dRmin);
+      int matchedTrackIndex = trackDRmap[dRmin];
+      reco::Track matchedTrack = numTracks.at(matchedTrackIndex);
+      fill_associate_tracks_histos(*&assTracksMEs_,&track,&matchedTrack,&denbs,&denpv);
     }
     for (std::map<double,int>::const_iterator mItr = trackDRmap.begin(), meItr = trackDRmap.end();
 	 mItr != meItr; ++mItr ) {
@@ -378,6 +213,8 @@ Track2TrackValidator::bookHistograms(DQMStore::IBooker & ibooker,
   bookHistos(ibooker,denTracksMEs_,   "ref",    dir);
   bookHistos(ibooker,denassTracksMEs_,"ref_ass",dir);
 
+  book_associate_tracks_histos(ibooker,assTracksMEs_,"associate",dir);
+
 }
 
 void 
@@ -450,6 +287,19 @@ Track2TrackValidator::book_generic_tracks_histos(DQMStore::IBooker & ibooker, ge
 
 }
 
+void 
+Track2TrackValidator::book_associate_tracks_histos(DQMStore::IBooker & ibooker, assME& mes, TString label, std::string & dir){
+
+  ibooker.cd();
+  ibooker.setCurrentFolder(dir);
+
+  (mes.h_hits_vs_hits)  = ibooker.book2D(label+"_hits_vs_hits","monitored track # hits vs reference track # hits", 35, -0.5, 34.5, 35,-0.5, 34.5);
+  (mes.h_pt_vs_pt)      = ibooker.book2D(label+"_pt_vs_pt",    "monitored track p_{T} vs reference track p_{T}",    nintPt,  minPt,  maxPt,  nintPt,  minPt,  maxPt);
+  (mes.h_eta_vs_eta)    = ibooker.book2D(label+"_eta_vs_eta",  "monitored track #eta vs reference track #eta",     nintEta, minEta, maxEta, nintEta, minEta, maxEta);
+  (mes.h_phi_vs_phi)    = ibooker.book2D(label+"_phi_vs_phi",  "monitored track #phi vs reference track #phi",     nintPhi, minPhi, maxPhi, nintPhi, minPhi, maxPhi);
+
+}
+
 
 void
 Track2TrackValidator::fill_generic_tracks_histos(generalME& mes, reco::Track* trk, reco::BeamSpot* bs, reco::Vertex* pv) {
@@ -475,6 +325,36 @@ Track2TrackValidator::fill_generic_tracks_histos(generalME& mes, reco::Track* tr
   (mes.h_hits    ) -> Fill(nhits);
 
   (mes.h_pt_vs_eta) -> Fill(eta,pt);
+  
+}
+
+void
+Track2TrackValidator::fill_associate_tracks_histos(assME& mes, reco::Track* mon, reco::Track* ref, reco::BeamSpot* bs, reco::Vertex* pv) {
+
+  float mon_pt       = mon->pt();
+  float mon_eta      = mon->eta();
+  float mon_phi      = mon->phi();
+  //  float mon_dxy      = mon->dxy(bs->position());
+  //  float mon_dz       = mon->dz(bs->position());
+  //  float mon_dxyWRTpv = mon->dxy(pv->position());
+  //  float mon_dzWRTpv  = mon->dz(pv->position());
+  //  float mon_charge   = mon->charge();
+  float mon_nhits    = mon->hitPattern().numberOfValidHits();
+
+  float ref_pt       = ref->pt();
+  float ref_eta      = ref->eta();
+  float ref_phi      = ref->phi();
+  //  float ref_dxy      = ref->dxy(bs->position());
+  //  float ref_dz       = ref->dz(bs->position());
+  //  float ref_dxyWRTpv = ref->dxy(pv->position());
+  //  float ref_dzWRTpv  = ref->dz(pv->position());
+  //  float ref_charge   = ref->charge();
+  float ref_nhits    = ref->hitPattern().numberOfValidHits();
+
+  (mes.h_hits_vs_hits) -> Fill(ref_nhits,mon_nhits);
+  (mes.h_pt_vs_pt    ) -> Fill(ref_pt,   mon_pt);
+  (mes.h_eta_vs_eta  ) -> Fill(ref_eta,  mon_eta);
+  (mes.h_phi_vs_phi  ) -> Fill(ref_phi,  mon_phi);
   
 }
 
@@ -563,4 +443,4 @@ Track2TrackValidator::initialize_parameter(const edm::ParameterSet& iConfig)
 }
 
 //define this as a plug-in
-DEFINE_FWK_MODULE(Track2TrackValidator);
+//DEFINE_FWK_MODULE(Track2TrackValidator);
