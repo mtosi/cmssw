@@ -27,9 +27,9 @@ histoHelper4hltTracking = cms.PSet(
     maxPhi  = cms.double( 3.1416),
     nintPhi = cms.int32(36),
     #
-    minDxy  = cms.double(-25.0),
-    maxDxy  = cms.double( 25.0),
-    nintDxy = cms.int32(100),
+    minDxy  = cms.double(-15.0),
+    maxDxy  = cms.double( 15.0),
+    nintDxy = cms.int32(600),
     #
     minDz  = cms.double(-30.0),
     maxDz  = cms.double( 30.0),
