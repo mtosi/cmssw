@@ -22,6 +22,7 @@
 #include <DQMServices/Core/interface/DQMEDAnalyzer.h>
 
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
+#include "DataFormats/VertexReco/interface/VertexFwd.h"
 
 #include "DQM/TrackingMonitorSource/interface/HistoHelper.h"
 
@@ -36,6 +37,7 @@ class DQMStore;
 namespace reco {
   class Track;
   class BeamSpot;
+  class Vertex;
 }
 class DQMStore;
 
@@ -80,6 +82,8 @@ class Track2TrackValidator : public DQMEDAnalyzer {
   edm::EDGetTokenT<reco::TrackCollection> denTrackToken_;
   edm::EDGetTokenT<reco::BeamSpot> numbsToken_;
   edm::EDGetTokenT<reco::BeamSpot> denbsToken_;
+  edm::EDGetTokenT<reco::VertexCollection> numpvToken_;
+  edm::EDGetTokenT<reco::VertexCollection> denpvToken_;
 
   std::string out;
 
@@ -100,6 +104,7 @@ class Track2TrackValidator : public DQMEDAnalyzer {
 
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/BeamSpot/interface/BeamSpot.h"
+#include "DataFormats/VertexReco/interface/Vertex.h"
 #include "TrackingTools/TrajectoryState/interface/FreeTrajectoryState.h"
 #include "TrackingTools/PatternTools/interface/TSCBLBuilderNoMaterial.h"
 
@@ -127,6 +132,8 @@ Track2TrackValidator::Track2TrackValidator(const edm::ParameterSet& iConfig)
   denTrackToken_      = consumes<reco::TrackCollection>(denTrackInputTag_);
   numbsToken_         = consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("numBeamSpot"));
   denbsToken_         = consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("denBeamSpot"));
+  numpvToken_         = consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("numPrimaryVertices"));
+  denpvToken_         = consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("denPrimaryVertices"));
   
   histoHelper_ = new HistoHelper(iConfig.getParameter<edm::ParameterSet>("histoPSet"));
   numTracksMEs_.label    = numTrackInputTag_.label();
@@ -156,15 +163,6 @@ void
 Track2TrackValidator::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
   
-  edm::Handle<reco::BeamSpot> numbsHandle;
-  iEvent.getByToken(numbsToken_,numbsHandle);
-  reco::BeamSpot numbs = *numbsHandle;
-
-  edm::Handle<reco::BeamSpot> denbsHandle;
-  iEvent.getByToken(denbsToken_,denbsHandle);
-  reco::BeamSpot denbs = *denbsHandle;
-  std::cout << "denbs: " << denbs << std::endl;
-
   edm::Handle<reco::TrackCollection> numTracksHandle;
   iEvent.getByToken(numTrackToken_,numTracksHandle);
   reco::TrackCollection numTracks = *numTracksHandle;
@@ -206,10 +204,14 @@ Track2TrackValidator::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   int ast(0);  	     //This counter counts the number of tracks that are "associated" to recoTracks
   unsigned asts(0);  //This counter counts the number of tracks that are "associated" to recoTracks surviving the bunchcrossing cut
 
+  edm::Handle<reco::BeamSpot> denbsHandle;
+  iEvent.getByToken(denbsToken_,denbsHandle);
+  reco::BeamSpot denbs = *denbsHandle;
+  
+  edm::Handle<reco::VertexCollection> denpvHandle;
+  iEvent.getByToken(denpvToken_,denpvHandle);
+  reco::Vertex denpv = denpvHandle->at(0);
   // loop over tracks (denominator)
-
-  size_t i = 0;
-
   std::cout << "[Track2TrackValidator::analyze] starting loop over denominator" << std::endl;
   for (idx2idxByDoubleColl::const_iterator pItr = den2numColl.begin(), eItr = den2numColl.end();
        pItr != eItr; ++pItr) {
@@ -217,7 +219,7 @@ Track2TrackValidator::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     int trackIdx = pItr->first;
     reco::Track track = denTracks.at(trackIdx);
 
-    histoHelper_->fill_generic_tracks_histos(*&denTracksMEs_,&track,&denbs);
+    histoHelper_->fill_generic_tracks_histos(*&denTracksMEs_,&track,&denbs,&denpv);
     st++;   //This counter counts the number of simulated tracks passing the MTV selection (i.e. tpSelector(tp) )
     
     std::map<double,int> trackDRmap = pItr->second;
@@ -226,7 +228,7 @@ Track2TrackValidator::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     bool matched = false;
     if ( dRmin < dRmin_ ) matched = true;
     if ( matched ) {
-      histoHelper_->fill_generic_tracks_histos(*&denassTracksMEs_,&track,&numbs);
+      histoHelper_->fill_generic_tracks_histos(*&denassTracksMEs_,&track,&denbs,&denpv);
       (denassTracksMEs_.h_dRmin)->Fill(dRmin);
     }
     for (std::map<double,int>::const_iterator mItr = trackDRmap.begin(), meItr = trackDRmap.end();
@@ -235,13 +237,20 @@ Track2TrackValidator::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     }
   }
 
+  edm::Handle<reco::BeamSpot> numbsHandle;
+  iEvent.getByToken(numbsToken_,numbsHandle);
+  reco::BeamSpot numbs = *numbsHandle;
+
+  edm::Handle<reco::VertexCollection> numpvHandle;
+  iEvent.getByToken(numpvToken_,numpvHandle);
+  reco::Vertex numpv = numpvHandle->at(0);
   // loop over tracks (numerator)
   for (idx2idxByDoubleColl::const_iterator pItr = num2denColl.begin(), eItr = num2denColl.end();
        pItr != eItr; ++pItr) {
 
     int trackIdx = pItr->first;
     reco::Track track = numTracks.at(trackIdx);
-    histoHelper_->fill_generic_tracks_histos(*&numTracksMEs_,&track,&numbs);
+    histoHelper_->fill_generic_tracks_histos(*&numTracksMEs_,&track,&numbs,&numpv);
    
     st++;   //This counter counts the number of simulated tracks passing the MTV selection (i.e. tpSelector(tp) )
     
@@ -254,7 +263,7 @@ Track2TrackValidator::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     if ( dRmin < dRmin_ ) matched = true;
     if ( !matched ) {
       (numassTracksMEs_.h_dRmin)->Fill(dRmin);
-      histoHelper_->fill_generic_tracks_histos(*&numassTracksMEs_,&track,&denbs);
+      histoHelper_->fill_generic_tracks_histos(*&numassTracksMEs_,&track,&numbs,&numpv);
     }
     for (std::map<double,int>::const_iterator mItr = trackDRmap.begin(), meItr = trackDRmap.end();
 	 mItr != meItr; ++mItr ) {
@@ -263,7 +272,6 @@ Track2TrackValidator::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     //    histoHelper_->fill_recoAssociated_simTrack_histos(w,*tp,momentumTP,vertexTP,dxySim,dzSim,nSimHits,matchedTrackPointer,puinfo.getPU_NumInteractions(), vtx_z_PU);
     if (matchedTrackIdx >= 0) asts++;
 
-    i++;
   } // end loop over tracks (denominator)
 
   // ##############################################

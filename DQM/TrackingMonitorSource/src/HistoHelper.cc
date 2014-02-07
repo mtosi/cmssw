@@ -2,6 +2,8 @@
 
 #include "DQMServices/ClientConfig/interface/FitSlicesYTool.h"
 
+#include "DataFormats/VertexReco/interface/Vertex.h"
+
 HistoHelper::HistoHelper(const edm::ParameterSet& iConfig) 
   : pset_ (iConfig)
 {
@@ -158,37 +160,44 @@ HistoHelper::book_generic_tracks_histos(DQMStore::IBooker & ibooker, generalME& 
   ibooker.cd();
   ibooker.setCurrentFolder(dir);
 
-  (mes.h_pt )    = ibooker.book1D(label+"_pt",    "track p_{T}",                         nintPt,  minPt,  maxPt   );
-  (mes.h_eta)    = ibooker.book1D(label+"_eta",   "track pseudorapidity",               nintEta, minEta, maxEta   );
-  (mes.h_phi)    = ibooker.book1D(label+"_phi",   "track #phi",                         nintPhi, minPhi, maxPhi   );
-  (mes.h_dxy)    = ibooker.book1D(label+"_dxy",   "track transverse dca to beam spot",  nintDxy, minDxy, maxDxy   );
-  (mes.h_dz    ) = ibooker.book1D(label+"_dz",    "track longitudinal dca to beam spot", nintDz,  minDz,  maxDz   );
-  (mes.h_charge) = ibooker.book1D(label+"_charge","track charge",                             5,   -2,        2   );
-  (mes.h_hits  ) = ibooker.book1D(label+"_hits",  "track number of hits",                    35,   -0.5,     34.5 );
-  (mes.h_dRmin)  = ibooker.book1D(label+"_dRmin", "track min dR",                           100,    0.,       0.01); 
+  (mes.h_pt )      = ibooker.book1D(label+"_pt",       "track p_{T}",                               nintPt,  minPt,  maxPt   );
+  (mes.h_eta)      = ibooker.book1D(label+"_eta",      "track pseudorapidity",                     nintEta, minEta, maxEta   );
+  (mes.h_phi)      = ibooker.book1D(label+"_phi",      "track #phi",                               nintPhi, minPhi, maxPhi   );
+  (mes.h_dxy)      = ibooker.book1D(label+"_dxy",      "track transverse dca to beam spot",        nintDxy, minDxy, maxDxy   );
+  (mes.h_dz )      = ibooker.book1D(label+"_dz",       "track longitudinal dca to beam spot",       nintDz,  minDz,  maxDz   );
+  (mes.h_dxyWRTpv) = ibooker.book1D(label+"_dxyWRTpv", "track transverse dca to primary vertex",   nintDxy, minDxy, maxDxy   );
+  (mes.h_dzWRTpv)  = ibooker.book1D(label+"_dzWRTpv",  "track longitudinal dca to primary vertex",  nintDz,  minDz,  maxDz   );
+  (mes.h_charge)   = ibooker.book1D(label+"_charge",   "track charge",                                   5,   -2,        2   );
+  (mes.h_hits  )   = ibooker.book1D(label+"_hits",     "track number of hits",                          35,   -0.5,     34.5 );
+  (mes.h_dRmin)    = ibooker.book1D(label+"_dRmin",    "track min dR",                                 100,    0.,       0.01); 
 
-  (mes.h_pt_vs_eta) = ibooker.book2D(label+"_ptVSeta","track p_{T} vs #eta", nintEta, minEta, maxEta, nintPt, minPt, maxPt);
+  (mes.h_pt_vs_eta)  = ibooker.book2D(label+"_ptVSeta","track p_{T} vs #eta", nintEta, minEta, maxEta, nintPt, minPt, maxPt);
+
 }
 
 
 void
-HistoHelper::fill_generic_tracks_histos(generalME& mes, reco::Track* trk, reco::BeamSpot* bs) {
+HistoHelper::fill_generic_tracks_histos(generalME& mes, reco::Track* trk, reco::BeamSpot* bs, reco::Vertex* pv) {
 
-  float pt     = trk->pt();
-  float eta    = trk->eta();
-  float phi    = trk->phi();
-  float dxy    = trk->dxy(bs->position());
-  float dz     = trk->dz(bs->position());
-  float charge = trk->charge();
-  float nhits  = trk->hitPattern().numberOfValidHits();
+  float pt       = trk->pt();
+  float eta      = trk->eta();
+  float phi      = trk->phi();
+  float dxy      = trk->dxy(bs->position());
+  float dz       = trk->dz(bs->position());
+  float dxyWRTpv = trk->dxy(pv->position());
+  float dzWRTpv  = trk->dz(pv->position());
+  float charge   = trk->charge();
+  float nhits    = trk->hitPattern().numberOfValidHits();
 
-  (mes.h_pt    ) -> Fill(pt);
-  (mes.h_eta   ) -> Fill(eta);
-  (mes.h_phi   ) -> Fill(phi);
-  (mes.h_dxy   ) -> Fill(dxy);
-  (mes.h_dz    ) -> Fill(dz);
-  (mes.h_charge) -> Fill(charge);
-  (mes.h_hits  ) -> Fill(nhits);
+  (mes.h_pt      ) -> Fill(pt);
+  (mes.h_eta     ) -> Fill(eta);
+  (mes.h_phi     ) -> Fill(phi);
+  (mes.h_dxy     ) -> Fill(dxy);
+  (mes.h_dz      ) -> Fill(dz);
+  (mes.h_dxyWRTpv) -> Fill(dxyWRTpv);
+  (mes.h_dzWRTpv ) -> Fill(dzWRTpv);
+  (mes.h_charge  ) -> Fill(charge);
+  (mes.h_hits    ) -> Fill(nhits);
 
   (mes.h_pt_vs_eta) -> Fill(eta,pt);
   

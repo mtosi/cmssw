@@ -8,6 +8,9 @@
 #include "DQMServices/Core/interface/MonitorElement.h"
 #include "DQMServices/Core/interface/DQMStore.h"
 
+namespace reco{
+  class Vertex;
+}
 
 class HistoHelper {
  public:
@@ -21,7 +24,7 @@ class HistoHelper {
 
   struct generalME {
     std::string label;
-    MonitorElement *h_tracks, *h_pt, *h_eta, *h_phi, *h_dxy, *h_dz, *h_charge, *h_hits;
+    MonitorElement *h_tracks, *h_pt, *h_eta, *h_phi, *h_dxy, *h_dz, *h_dxyWRTpv, *h_dzWRTpv, *h_charge, *h_hits;
     MonitorElement *h_dRmin;
     MonitorElement *h_pt_vs_eta;
   };
@@ -29,42 +32,7 @@ class HistoHelper {
   void bookHistos(DQMStore::IBooker & ibooker, generalME& mes, TString label, std::string & dir);
   void book_generic_tracks_histos(DQMStore::IBooker & ibooker, generalME& mes, TString label, std::string & dir);
 
-  void fill_generic_tracks_histos(generalME& mes, reco::Track* trk, reco::BeamSpot* bs);
-  void fillNumeratorHistos(const reco::Track::Vector&,const reco::Track::Point& vertex, int bx);
-
-  void fillDenominatorHistos(
-			     const reco::Track& tp,
-			     const reco::Track::Vector& momentumTP, const reco::Track::Point& vertexTP,
-			     double dxy, double dz, int nSimHits,
-			     const reco::Track* track,
-			     int numVertices, double vertz);
-
-  void fillAssociatedNumeratorHistos(
-					     const reco::Track& tp,
-					     const reco::Track::Vector & momentumTP, const reco::Track::Point & vertexTP,
-					     double dxy, double dz, int nSimHits,
-					     const reco::Track* track,
-					     int numVertices, double vertz);
-
-  void fill_generic_recoTrack_histos(
-				     	     const reco::Track& track,
-				     	     const math::XYZPoint& bsPosition,
-				     	     bool isMatched,
-				     	     bool isSigMatched,
-				     	     bool isChargeMatched,
-					     int numAssocRecoTracks,
-                         	             int numVertices,
-                         		     int tpbunchcrossing,
-				             int nSimHits,
-   					     double sharedFraction);
-
-  void fillAssociatedDenominatorHistos(
-					       const reco::Track& track);
-
-  void fillGeneralHistos(
-				 int assTracks,
-				 int numRecoTracks,
-				 int numSimTracks);
+  void fill_generic_tracks_histos(generalME& mes, reco::Track* trk, reco::BeamSpot* bs, reco::Vertex* pv);
 
   void fillResolutionHistos(
 				    const reco::Track::Vector& momentumTP,
