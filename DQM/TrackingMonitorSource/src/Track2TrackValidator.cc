@@ -27,6 +27,8 @@ Track2TrackValidator::Track2TrackValidator(const edm::ParameterSet& iConfig)
   , topDirName_       ( iConfig.getParameter<std::string>  ("topDirName")     )
   , dRmin_            ( iConfig.getParameter<double>("dRmin")                 )
 {
+  initialize_parameter(iConfig);
+
    //now do what ever initialization is needed
   numTrackToken_      = consumes<reco::TrackCollection>(numTrackInputTag_);
   denTrackToken_      = consumes<reco::TrackCollection>(denTrackInputTag_);
@@ -80,6 +82,7 @@ Track2TrackValidator::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 					   << denTrackInputTag_.label()    << ":"
 					   << denTrackInputTag_.instance() << " \n";
   
+  /*
   std::cout << "analyzing "
 	    << numTrackInputTag_.process()  << ":"
 	    << numTrackInputTag_.label()    << ":"
@@ -87,6 +90,7 @@ Track2TrackValidator::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 	    << denTrackInputTag_.process()  << ":"
 	    << denTrackInputTag_.label()    << ":"
 	    << denTrackInputTag_.instance() << " \n";
+  */
   
   idx2idxByDoubleColl num2denColl;
   fillMap(numTracks,denTracks,num2denColl);
@@ -113,7 +117,7 @@ Track2TrackValidator::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   iEvent.getByToken(denpvToken_,denpvHandle);
   reco::Vertex denpv = denpvHandle->at(0);
   // loop over tracks (denominator)
-  std::cout << "[Track2TrackValidator::analyze] starting loop over denominator" << std::endl;
+  //  std::cout << "[Track2TrackValidator::analyze] starting loop over denominator" << std::endl;
   for (idx2idxByDoubleColl::const_iterator pItr = den2numColl.begin(), eItr = den2numColl.end();
        pItr != eItr; ++pItr) {
     
@@ -124,7 +128,12 @@ Track2TrackValidator::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     st++;   //This counter counts the number of simulated tracks passing the MTV selection (i.e. tpSelector(tp) )
     
     std::map<double,int> trackDRmap = pItr->second;
+    if (trackDRmap.size() == 0) {
+      (denassTracksMEs_.h_dRmin)->Fill(-1.);
+      continue;
+    }
     double dRmin = trackDRmap.begin()->first;
+    //    std::cout << "[Track2TrackValidator::analyze] den2numColl loop: dRmin: " << dRmin << " [map size: " << trackDRmap.size() << "]" << std::endl;
     (denTracksMEs_.h_dRmin)->Fill(dRmin);
     bool matched = false;
     if ( dRmin < dRmin_ ) matched = true;
@@ -132,12 +141,13 @@ Track2TrackValidator::analyze(const edm::Event& iEvent, const edm::EventSetup& i
       fill_generic_tracks_histos(*&denassTracksMEs_,&track,&denbs,&denpv);
       (denassTracksMEs_.h_dRmin)->Fill(dRmin);
       int matchedTrackIndex = trackDRmap[dRmin];
+      //      std::cout << " --> matchedTrackIndex: " << matchedTrackIndex << std::endl;
       reco::Track matchedTrack = numTracks.at(matchedTrackIndex);
       fill_associate_tracks_histos(*&assTracksMEs_,&track,&matchedTrack,&denbs,&denpv);
     }
     for (std::map<double,int>::const_iterator mItr = trackDRmap.begin(), meItr = trackDRmap.end();
 	 mItr != meItr; ++mItr ) {
-      //      std::cout << " --> dR: " <<  mItr->first << " trkIdx: " << mItr->second << std::endl;
+      //      //      std::cout << " --> dR: " <<  mItr->first << " trkIdx: " << mItr->second << std::endl;
     }
   }
 
@@ -160,9 +170,13 @@ Track2TrackValidator::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     
     int matchedTrackIdx = -1;
     std::map<double,int> trackDRmap = pItr->second;
+    if (trackDRmap.size() == 0) {
+      (numassTracksMEs_.h_dRmin)->Fill(-1.);
+      continue;
+    }
     double dRmin = trackDRmap.begin()->first;
     (numTracksMEs_.h_dRmin)->Fill(dRmin);
-    std::cout << "num2denColl[" <<  trackIdx << "]" << " map size: " << trackDRmap.size() << " dRmin: " << dRmin << std::endl;
+    //    //    std::cout << "num2denColl[" <<  trackIdx << "]" << " map size: " << trackDRmap.size() << " dRmin: " << dRmin << std::endl;
     bool matched = false;
     if ( dRmin < dRmin_ ) matched = true;
     if ( !matched ) {
@@ -204,7 +218,7 @@ Track2TrackValidator::bookHistograms(DQMStore::IBooker & ibooker,
 				     edm::EventSetup const & iSetup)
 {
   
-  std::cout << "[Track2TrackValidator::bookHistograms]" << std::endl;
+  //  std::cout << "[Track2TrackValidator::bookHistograms]" << std::endl;
 
   std::string dir = topDirName_;
 
@@ -255,7 +269,7 @@ Track2TrackValidator::fillMap(reco::TrackCollection tracks1, reco::TrackCollecti
     map.push_back(std::make_pair(i,tmp));
     i++;
   }
-  std::cout << "map: " << map.size() << "[tracks1: " << tracks1.size() << ", tracks2: " << tracks2.size() << "]" << std::endl;
+  //  std::cout << "map: " << map.size() << "[tracks1: " << tracks1.size() << ", tracks2: " << tracks2.size() << "]" << std::endl;
 
 }
 
@@ -361,74 +375,79 @@ Track2TrackValidator::fill_associate_tracks_histos(assME& mes, reco::Track* mon,
 void
 Track2TrackValidator::initialize_parameter(const edm::ParameterSet& iConfig)
 {
+
+  const edm::ParameterSet& pset = iConfig.getParameter<edm::ParameterSet>("histoPSet");
+
   //parameters for _vs_eta plots
-  minEta     = iConfig.getParameter<double>("minEta");
-  maxEta     = iConfig.getParameter<double>("maxEta");
-  nintEta    = iConfig.getParameter<int>("nintEta");
-  useFabsEta = iConfig.getParameter<bool>("useFabsEta");
+  minEta     = pset.getParameter<double>("minEta");
+  maxEta     = pset.getParameter<double>("maxEta");
+  nintEta    = pset.getParameter<int>("nintEta");
+  useFabsEta = pset.getParameter<bool>("useFabsEta");
 
   //parameters for _vs_pt plots
-  minPt    = iConfig.getParameter<double>("minPt");
-  maxPt    = iConfig.getParameter<double>("maxPt");
-  nintPt   = iConfig.getParameter<int>("nintPt");
-  useInvPt = iConfig.getParameter<bool>("useInvPt");
-  useLogPt = iConfig.getUntrackedParameter<bool>("useLogPt",false);
+  minPt    = pset.getParameter<double>("minPt");
+  maxPt    = pset.getParameter<double>("maxPt");
+  nintPt   = pset.getParameter<int>("nintPt");
+  useInvPt = pset.getParameter<bool>("useInvPt");
+  useLogPt = pset.getUntrackedParameter<bool>("useLogPt",false);
 
   //parameters for _vs_Hit plots
-  minHit  = iConfig.getParameter<double>("minHit");
-  maxHit  = iConfig.getParameter<double>("maxHit");
-  nintHit = iConfig.getParameter<int>("nintHit");
+  minHit  = pset.getParameter<double>("minHit");
+  maxHit  = pset.getParameter<double>("maxHit");
+  nintHit = pset.getParameter<int>("nintHit");
 
   //parameters for _vs_Layer plots
-  minLayers  = iConfig.getParameter<double>("minLayers");
-  maxLayers  = iConfig.getParameter<double>("maxLayers");
-  nintLayers = iConfig.getParameter<int>("nintLayers");
+  minLayers  = pset.getParameter<double>("minLayers");
+  maxLayers  = pset.getParameter<double>("maxLayers");
+  nintLayers = pset.getParameter<int>("nintLayers");
 
   //parameters for _vs_phi plots
-  minPhi  = iConfig.getParameter<double>("minPhi");
-  maxPhi  = iConfig.getParameter<double>("maxPhi");
-  nintPhi = iConfig.getParameter<int>("nintPhi");
+  minPhi  = pset.getParameter<double>("minPhi");
+  maxPhi  = pset.getParameter<double>("maxPhi");
+  nintPhi = pset.getParameter<int>("nintPhi");
 
   //parameters for _vs_Dxy plots
-  minDxy  = iConfig.getParameter<double>("minDxy");
-  maxDxy  = iConfig.getParameter<double>("maxDxy");
-  nintDxy = iConfig.getParameter<int>("nintDxy");
+  minDxy  = pset.getParameter<double>("minDxy");
+  maxDxy  = pset.getParameter<double>("maxDxy");
+  nintDxy = pset.getParameter<int>("nintDxy");
 
   //parameters for _vs_Dz plots
-  minDz  = iConfig.getParameter<double>("minDz");
-  maxDz  = iConfig.getParameter<double>("maxDz");
-  nintDz = iConfig.getParameter<int>("nintDz");
+  minDz  = pset.getParameter<double>("minDz");
+  maxDz  = pset.getParameter<double>("maxDz");
+  nintDz = pset.getParameter<int>("nintDz");
 
   //parameters for _vs_ProductionVertexTransvPosition plots
-  minVertpos  = iConfig.getParameter<double>("minVertpos");
-  maxVertpos  = iConfig.getParameter<double>("maxVertpos");
-  nintVertpos = iConfig.getParameter<int>("nintVertpos");
+  minVertpos  = pset.getParameter<double>("minVertpos");
+  maxVertpos  = pset.getParameter<double>("maxVertpos");
+  nintVertpos = pset.getParameter<int>("nintVertpos");
 
   //parameters for _vs_ProductionVertexZPosition plots
-  minZpos  = iConfig.getParameter<double>("minZpos");
-  maxZpos  = iConfig.getParameter<double>("maxZpos");
-  nintZpos = iConfig.getParameter<int>("nintZpos");
+  minZpos  = pset.getParameter<double>("minZpos");
+  maxZpos  = pset.getParameter<double>("maxZpos");
+  nintZpos = pset.getParameter<int>("nintZpos");
 
   //parameters for resolution plots
-  ptRes_rangeMin = iConfig.getParameter<double>("ptRes_rangeMin");
-  ptRes_rangeMax = iConfig.getParameter<double>("ptRes_rangeMax");
-  ptRes_nbin = iConfig.getParameter<int>("ptRes_nbin");
+  ptRes_rangeMin = pset.getParameter<double>("ptRes_rangeMin");
+  ptRes_rangeMax = pset.getParameter<double>("ptRes_rangeMax");
+  ptRes_nbin = pset.getParameter<int>("ptRes_nbin");
 
-  phiRes_rangeMin = iConfig.getParameter<double>("phiRes_rangeMin");
-  phiRes_rangeMax = iConfig.getParameter<double>("phiRes_rangeMax");
-  phiRes_nbin = iConfig.getParameter<int>("phiRes_nbin");
+  phiRes_rangeMin = pset.getParameter<double>("phiRes_rangeMin");
+  phiRes_rangeMax = pset.getParameter<double>("phiRes_rangeMax");
+  phiRes_nbin = pset.getParameter<int>("phiRes_nbin");
 
-  cotThetaRes_rangeMin = iConfig.getParameter<double>("cotThetaRes_rangeMin");
-  cotThetaRes_rangeMax = iConfig.getParameter<double>("cotThetaRes_rangeMax");
-  cotThetaRes_nbin = iConfig.getParameter<int>("cotThetaRes_nbin");
+  cotThetaRes_rangeMin = pset.getParameter<double>("cotThetaRes_rangeMin");
+  cotThetaRes_rangeMax = pset.getParameter<double>("cotThetaRes_rangeMax");
+  cotThetaRes_nbin = pset.getParameter<int>("cotThetaRes_nbin");
 
-  dxyRes_rangeMin = iConfig.getParameter<double>("dxyRes_rangeMin");
-  dxyRes_rangeMax = iConfig.getParameter<double>("dxyRes_rangeMax");
-  dxyRes_nbin = iConfig.getParameter<int>("dxyRes_nbin");
+  dxyRes_rangeMin = pset.getParameter<double>("dxyRes_rangeMin");
+  dxyRes_rangeMax = pset.getParameter<double>("dxyRes_rangeMax");
+  dxyRes_nbin = pset.getParameter<int>("dxyRes_nbin");
 
-  dzRes_rangeMin = iConfig.getParameter<double>("dzRes_rangeMin");
-  dzRes_rangeMax = iConfig.getParameter<double>("dzRes_rangeMax");
-  dzRes_nbin = iConfig.getParameter<int>("dzRes_nbin");
+  dzRes_rangeMin = pset.getParameter<double>("dzRes_rangeMin");
+  dzRes_rangeMax = pset.getParameter<double>("dzRes_rangeMax");
+  dzRes_nbin = pset.getParameter<int>("dzRes_nbin");
+
+  useLogPt = pset.getUntrackedParameter<bool>("useLogPt",false);
 
   // fix for the LogScale
   if(useLogPt){

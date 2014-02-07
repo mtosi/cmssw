@@ -75,7 +75,8 @@ hltIter1Merged2highPurityTracks.denTrack      = cms.InputTag("highPurityTracks")
 hltIter1Merged2highPurityTracks.numBeamSpot   = cms.InputTag("hltOnlineBeamSpot")
 hltIter1Merged2highPurityTracks.denBeamSpot   = cms.InputTag("offlineBeamSpot")
 hltIter1Merged2highPurityTracks.topDirName    = cms.string("HLT/Tracking/ValidationWRTreco/hltIter1Merged")
-
+hltIter1Merged2highPurityTracks.minEta = cms.double(-2.5)
+    
 hltIter0Merged2highPurityTracks = track2trackValidator.clone()
 hltIter0Merged2highPurityTracks.numTrack      = cms.InputTag("hltPFlowTrackSelectionHighPurity")
 hltIter0Merged2highPurityTracks.denTrack      = cms.InputTag("highPurityTracks")
