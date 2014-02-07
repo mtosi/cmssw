@@ -8,6 +8,7 @@
 #include "DQMServices/Core/interface/MonitorElement.h"
 #include "DQMServices/Core/interface/DQMStore.h"
 
+
 class HistoHelper {
  public:
 
@@ -18,11 +19,17 @@ class HistoHelper {
   void initialize();
   void setUpVectors();
 
-  void bookHistos(DQMStore::IBooker & ibooker);
-  void bookNumeratorHisto(DQMStore::IBooker & ibooker);
-  void bookDenominatorHisto(DQMStore::IBooker & ibooker);
-  void bookComparisonHisto(DQMStore::IBooker & ibooker);
+  struct generalME {
+    std::string label;
+    MonitorElement *h_tracks, *h_pt, *h_eta, *h_phi, *h_dxy, *h_dz, *h_charge, *h_hits;
+    MonitorElement *h_dRmin;
+    MonitorElement *h_pt_vs_eta;
+  };
+  
+  void bookHistos(DQMStore::IBooker & ibooker, generalME& mes, TString label, std::string & dir);
+  void book_generic_tracks_histos(DQMStore::IBooker & ibooker, generalME& mes, TString label, std::string & dir);
 
+  void fill_generic_tracks_histos(generalME& mes, reco::Track* trk, reco::BeamSpot* bs);
   void fillNumeratorHistos(const reco::Track::Vector&,const reco::Track::Point& vertex, int bx);
 
   void fillDenominatorHistos(
@@ -129,11 +136,7 @@ class HistoHelper {
 
 
   // denominator
-  struct generalME {
-    MonitorElement* h_tracks, h_pt, h_eta, h_phi, h_dxy, h_dz, h_vertpos, h_charge, h_hits;
-    MonitorElement* h_pt_vs_eta;
-  };
-  
+
   //1D
   MonitorElement* h_eff_vs_eta, h_fake_vs_eta;
   MonitorElement* h_eff_vs_pt,  h_fake_vs_pt;

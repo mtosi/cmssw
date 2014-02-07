@@ -19,11 +19,11 @@
 
 #include "FWCore/Utilities/interface/EDGetToken.h"
 
-#include "DQM/TrackingMonitorSource/interface/Track2TrackAssociatorBase.h"
-#include "CommonTools/RecoAlgos/interface/RecoTrackSelector.h"
-#include "CommonTools/RecoAlgos/interface/CosmicTrackingParticleSelector.h"
-
 #include <DQMServices/Core/interface/DQMEDAnalyzer.h>
+
+#include "DataFormats/TrackReco/interface/TrackFwd.h"
+
+#include "DQM/TrackingMonitorSource/interface/HistoHelper.h"
 
 #include <iostream>
 #include <sstream>
@@ -33,12 +33,27 @@
 // class declaration
 //
 class DQMStore;
-class Track;
+namespace reco {
+  class Track;
+  class BeamSpot;
+}
 class DQMStore;
-class HistoHelper;
 
 class Track2TrackValidator : public DQMEDAnalyzer {
+
+  /*
+  vector<pair<int, map<double, int> > > res
+  for j in loop_off_trk
+     map<double, int> tmp
+     for i in loop_online_trk
+       tmp[dR(j,i)] = i
+     res.push_back(make_pair<j, tmp>)
+  */     
+
    public:
+
+  typedef std::vector<std::pair<int, std::map<double, int> > > idx2idxByDoubleColl;
+
       explicit Track2TrackValidator(const edm::ParameterSet&);
       ~Track2TrackValidator();
 
@@ -53,49 +68,42 @@ class Track2TrackValidator : public DQMEDAnalyzer {
       // ----------member data ---------------------------
  protected:
   
+  void fillMap(reco::TrackCollection tracks1, reco::TrackCollection tracks2, idx2idxByDoubleColl& map);
+
   DQMStore* dqmStore_;
 
   edm::InputTag numTrackInputTag_;
   edm::InputTag denTrackInputTag_;
 
   //these are used by MTVGenPs
-  edm::EDGetTokenT<reco::Track> numTrackToken_;
-  edm::EDGetTokenT<reco::Track> denTrackToken_;
-  edm::EDGetTokenT<reco::RecoToRecoCollection> associatorMapToken_;
-  edm::EDGetTokenT<reco::BeamSpot> bsToken_;
-
-  bool useAssociator_;
-  std::string associators;
-  edm::InputTag associatorMap_;
-  const Track2TrackAssociatorBase* associator;
+  edm::EDGetTokenT<reco::TrackCollection> numTrackToken_;
+  edm::EDGetTokenT<reco::TrackCollection> denTrackToken_;
+  edm::EDGetTokenT<reco::BeamSpot> numbsToken_;
+  edm::EDGetTokenT<reco::BeamSpot> denbsToken_;
 
   std::string out;
 
-
-  edm::ESHandle<MagneticField> theMF;
-
  private:
+  //  edm::ParameterSet conf_;
   std::string topDirName_;
-
-  // select tracking particles 
-  //(i.e. "denominator" of the efficiency ratio)
-  //  TrackSelector tpSelector;				      
-  edm::InputTag hitMapInputTag_;
+  double dRmin_;
 
   HistoHelper* histoHelper_;
-
+  HistoHelper::generalME numTracksMEs_;  
+  HistoHelper::generalME numassTracksMEs_;  
+  HistoHelper::generalME denTracksMEs_;  
+  HistoHelper::generalME denassTracksMEs_;  
+  
 };
 
 #include "DQMServices/Core/interface/DQMStore.h"
 
 #include "DataFormats/TrackReco/interface/Track.h"
-#include "DataFormats/TrackReco/interface/TrackFwd.h"
+#include "DataFormats/BeamSpot/interface/BeamSpot.h"
 #include "TrackingTools/TrajectoryState/interface/FreeTrajectoryState.h"
 #include "TrackingTools/PatternTools/interface/TSCBLBuilderNoMaterial.h"
 
-#include "DQM/TrackingMonitorSource/interface/HistoHelper.h"
-//#include "SimTracker/Records/interface/TrackAssociatorRecord.h"
-
+#include "DataFormats/Math/interface/deltaR.h"
 
 //
 // constants, enums and typedefs
@@ -111,21 +119,20 @@ class Track2TrackValidator : public DQMEDAnalyzer {
 Track2TrackValidator::Track2TrackValidator(const edm::ParameterSet& iConfig)
   : numTrackInputTag_ ( iConfig.getParameter<edm::InputTag>("numTrack")       )
   , denTrackInputTag_ ( iConfig.getParameter<edm::InputTag>("denTrack")       )
-  , useAssociator_    ( iConfig.getParameter<bool>         ("useAssociator")  )
-  , associatorMap_    ( iConfig.getParameter<edm::InputTag>("associatorMap")  )
   , topDirName_       ( iConfig.getParameter<std::string>  ("topDirName")     )
-  , hitMapInputTag_   ( iConfig.getParameter<edm::InputTag>("hitMapInputTag") )
+  , dRmin_            ( iConfig.getParameter<double>("dRmin")                 )
 {
    //now do what ever initialization is needed
-  numTrackToken_      = consumes<reco::Track>(numTrackInputTag_);
-  denTrackToken_      = consumes<reco::Track>(denTrackInputTag_);
-  associatorMapToken_ = consumes<reco::RecoToRecoCollection>(associatorMap_);
-  bsToken_            = consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("beamSpot"));
-  
-  associators = associatorMap_.label();
+  numTrackToken_      = consumes<reco::TrackCollection>(numTrackInputTag_);
+  denTrackToken_      = consumes<reco::TrackCollection>(denTrackInputTag_);
+  numbsToken_         = consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("numBeamSpot"));
+  denbsToken_         = consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("denBeamSpot"));
   
   histoHelper_ = new HistoHelper(iConfig.getParameter<edm::ParameterSet>("histoPSet"));
-
+  numTracksMEs_.label    = numTrackInputTag_.label();
+  numassTracksMEs_.label = numTrackInputTag_.label()+"_ass";
+  denTracksMEs_.label    = denTrackInputTag_.label();
+  denassTracksMEs_.label = denTrackInputTag_.label()+"_ass";
 }
 
 
@@ -139,11 +146,6 @@ Track2TrackValidator::~Track2TrackValidator()
 
 void
 Track2TrackValidator::beginJob(const edm::EventSetup& iSetup) {
-  if (useAssociator_) {
-    //    edm::ESHandle<Track2TrackAssociatorBase> theAssociator;
-    //    iSetup.get<TrackAssociatorRecord>().get(associators,theAssociator);
-    //    associator = theAssociator.product();
-  }
 }
 
 //
@@ -154,36 +156,44 @@ void
 Track2TrackValidator::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
   
-  edm::Handle<reco::BeamSpot> bsHandle;
-  iEvent.getByToken(bsToken_,bsHandle);
-  reco::BeamSpot bs = *bsHandle;
+  edm::Handle<reco::BeamSpot> numbsHandle;
+  iEvent.getByToken(numbsToken_,numbsHandle);
+  reco::BeamSpot numbs = *numbsHandle;
 
-  edm::Handle<edm::View<reco::Track> > numTracks;
-  iEvent.getByToken(numTrackToken_,numTracks);
+  edm::Handle<reco::BeamSpot> denbsHandle;
+  iEvent.getByToken(denbsToken_,denbsHandle);
+  reco::BeamSpot denbs = *denbsHandle;
+  std::cout << "denbs: " << denbs << std::endl;
 
-  edm::Handle<edm::View<reco::Track> > denTracks;
-  iEvent.getByToken(denTrackToken_,denTracks);
+  edm::Handle<reco::TrackCollection> numTracksHandle;
+  iEvent.getByToken(numTrackToken_,numTracksHandle);
+  reco::TrackCollection numTracks = *numTracksHandle;
 
-  reco::RecoToRecoCollection reco1TOreco2Coll;
-  reco::RecoToRecoCollection reco2TOreco1Coll;
-  if (useAssociator_) {
-    edm::LogVerbatim("Track2TrackValidator") << "analyzing "
-					     << numTrackInputTag_.process()  << ":"
-					     << numTrackInputTag_.label()    << ":"
-					     << numTrackInputTag_.instance() << " w.r.t. "
-					     << denTrackInputTag_.process()  << ":"
-					     << denTrackInputTag_.label()    << ":"
-					     << denTrackInputTag_.instance() << " \n";
+  edm::Handle<reco::TrackCollection> denTracksHandle;
+  iEvent.getByToken(denTrackToken_,denTracksHandle);
+  reco::TrackCollection denTracks = *denTracksHandle;
 
-    reco1TOreco2Coll = associator->associateRecoToReco(numTracks,denTracks,&iEvent,&iSetup);
-    reco2TOreco1Coll = associator->associateRecoToReco(denTracks,numTracks,&iEvent,&iSetup);
-  } else {
-    
-    edm::Handle<reco::RecoToRecoCollection> reco1TOreco2CollHandle;
-    iEvent.getByToken(associatorMapToken_,reco1TOreco2CollHandle);
-    reco1TOreco2Coll = *(reco1TOreco2CollHandle.product());
-  }
+  edm::LogVerbatim("Track2TrackValidator") << "analyzing "
+					   << numTrackInputTag_.process()  << ":"
+					   << numTrackInputTag_.label()    << ":"
+					   << numTrackInputTag_.instance() << " w.r.t. "
+					   << denTrackInputTag_.process()  << ":"
+					   << denTrackInputTag_.label()    << ":"
+					   << denTrackInputTag_.instance() << " \n";
+  
+  std::cout << "analyzing "
+	    << numTrackInputTag_.process()  << ":"
+	    << numTrackInputTag_.label()    << ":"
+	    << numTrackInputTag_.instance() << " w.r.t. "
+	    << denTrackInputTag_.process()  << ":"
+	    << denTrackInputTag_.label()    << ":"
+	    << denTrackInputTag_.instance() << " \n";
+  
+  idx2idxByDoubleColl num2denColl;
+  fillMap(numTracks,denTracks,num2denColl);
 
+  idx2idxByDoubleColl den2numColl;
+  fillMap(denTracks,numTracks,den2numColl);
 
   // ########################################################
   // fill simulation histograms (LOOP OVER TRACKINGPARTICLES)
@@ -191,72 +201,71 @@ Track2TrackValidator::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   
   //compute number of tracks per eta interval
   //
-  edm::LogVerbatim("Track2TrackValidator") << "\n# of tracks (denominator): " << denTracks->size() << "\n";
+  edm::LogVerbatim("Track2TrackValidator") << "\n# of tracks (denominator): " << denTracks.size() << "\n";
   int st(0);  	     //This counter counts the number of tracks
   int ast(0);  	     //This counter counts the number of tracks that are "associated" to recoTracks
-  unsigned sts(0);   //This counter counts the number of tracks surviving the bunchcrossing cut
   unsigned asts(0);  //This counter counts the number of tracks that are "associated" to recoTracks surviving the bunchcrossing cut
 
   // loop over tracks (denominator)
-  edm::View<reco::Track>::size_type denTracksN = denTracks->size();
-  for ( edm::View<reco::Track>::size_type i=0; i < denTracksN; i++ ) {
 
-    edm::RefToBase<reco::Track> track(denTracks, i);
-    double dxy(0);
-    double dz(0);
+  size_t i = 0;
+
+  std::cout << "[Track2TrackValidator::analyze] starting loop over denominator" << std::endl;
+  for (idx2idxByDoubleColl::const_iterator pItr = den2numColl.begin(), eItr = den2numColl.end();
+       pItr != eItr; ++pItr) {
     
-    reco::Track::Vector momentumTP = track->momentum();
-    reco::Track::Point  vertexTP   = track->vertex();
-    //Calcualte the impact parameters w.r.t. PCA
-    dxy = track->dxy(bs.position());
-    dz  = track->dz(bs.position());
-    std::cout << "dxy: " << dxy << " dz: " << dz << " vertexTP: " << vertexTP << std::endl;
+    int trackIdx = pItr->first;
+    reco::Track track = denTracks.at(trackIdx);
+
+    histoHelper_->fill_generic_tracks_histos(*&denTracksMEs_,&track,&denbs);
+    st++;   //This counter counts the number of simulated tracks passing the MTV selection (i.e. tpSelector(tp) )
+    
+    std::map<double,int> trackDRmap = pItr->second;
+    double dRmin = trackDRmap.begin()->first;
+    (denTracksMEs_.h_dRmin)->Fill(dRmin);
+    bool matched = false;
+    if ( dRmin < dRmin_ ) matched = true;
+    if ( matched ) {
+      histoHelper_->fill_generic_tracks_histos(*&denassTracksMEs_,&track,&numbs);
+      (denassTracksMEs_.h_dRmin)->Fill(dRmin);
+    }
+    for (std::map<double,int>::const_iterator mItr = trackDRmap.begin(), meItr = trackDRmap.end();
+	 mItr != meItr; ++mItr ) {
+      //      std::cout << " --> dR: " <<  mItr->first << " trkIdx: " << mItr->second << std::endl;
+    }
+  }
+
+  // loop over tracks (numerator)
+  for (idx2idxByDoubleColl::const_iterator pItr = num2denColl.begin(), eItr = num2denColl.end();
+       pItr != eItr; ++pItr) {
+
+    int trackIdx = pItr->first;
+    reco::Track track = numTracks.at(trackIdx);
+    histoHelper_->fill_generic_tracks_histos(*&numTracksMEs_,&track,&numbs);
    
     st++;   //This counter counts the number of simulated tracks passing the MTV selection (i.e. tpSelector(tp) )
     
-    // in the coming lines, histos are filled using as input
-    // - momentumTP
-    // - vertexTP
-    // - dxySim
-    // - dzSim
-    
-    //    histoHelper_->fill_generic_simTrack_histos(momentumTP,vertexTP, tp->eventId().bunchCrossing());
-    
-    
-    // ######################################
-    // fill RecoAssociated Tracks' histograms
-    // ######################################
-    const reco::Track* matchedTrackPointer=0;
-    std::vector<std::pair<edm::RefToBase<reco::Track>, double> > rt;
-    if(reco2TOreco1Coll.find(track) != reco2TOreco1Coll.end()){
-      rt = (std::vector<std::pair<edm::RefToBase<reco::Track>, double> >) reco2TOreco1Coll[track];
-
-      if (rt.size()!=0) {
-	ast++; //This counter counts the number of tracks that have a recoTrack associated
-	matchedTrackPointer = rt.begin()->first.get();
-	edm::LogVerbatim("Track2TrackValidator") << "Track #" << st
-						 << " with pt=" << sqrt(momentumTP.perp2())
-						 << " associated with quality:" << rt.begin()->second <<"\n";
-      }
-    } else{
-      edm::LogVerbatim("TrackValidator")
-	<< "Track #" << st
-	<< " with pt,eta,phi: "
-	<< sqrt(momentumTP.perp2()) << " , "
-	<< momentumTP.eta() << " , "
-	<< momentumTP.phi() << " , "
-	<< " NOT associated to any reco::Track" << "\n";
+    int matchedTrackIdx = -1;
+    std::map<double,int> trackDRmap = pItr->second;
+    double dRmin = trackDRmap.begin()->first;
+    (numTracksMEs_.h_dRmin)->Fill(dRmin);
+    std::cout << "num2denColl[" <<  trackIdx << "]" << " map size: " << trackDRmap.size() << " dRmin: " << dRmin << std::endl;
+    bool matched = false;
+    if ( dRmin < dRmin_ ) matched = true;
+    if ( !matched ) {
+      (numassTracksMEs_.h_dRmin)->Fill(dRmin);
+      histoHelper_->fill_generic_tracks_histos(*&numassTracksMEs_,&track,&denbs);
     }
-    
-    int nRecoHits = track->hitPattern().numberOfHits();
-    std::cout << "nRecoHits: " << nRecoHits << std::endl;
-
+    for (std::map<double,int>::const_iterator mItr = trackDRmap.begin(), meItr = trackDRmap.end();
+	 mItr != meItr; ++mItr ) {
+      //      std::cout << " --> dR: " <<  mItr->first << " trkIdx: " << mItr->second << std::endl;
+    }
     //    histoHelper_->fill_recoAssociated_simTrack_histos(w,*tp,momentumTP,vertexTP,dxySim,dzSim,nSimHits,matchedTrackPointer,puinfo.getPU_NumInteractions(), vtx_z_PU);
-    sts++;
-    if (matchedTrackPointer) asts++;
-    
+    if (matchedTrackIdx >= 0) asts++;
+
+    i++;
   } // end loop over tracks (denominator)
-  
+
   // ##############################################
   // fill reco Tracks histograms (LOOP OVER TRACKS)
   // ##############################################
@@ -264,77 +273,10 @@ Track2TrackValidator::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 					   << numTrackInputTag_.process()<<":"
 					   << numTrackInputTag_.label()<<":"
 					   << numTrackInputTag_.instance()
-					   << ": " << numTracks->size() << "\n";
+					   << ": " << numTracks.size() << "\n";
   
-  //  int sat(0); //This counter counts the number of recoTracks that are associated to Tracks from Signal only
   int at(0);  //This counter counts the number of recoTracks that are associated to Tracks
   int rT(0);  //This counter counts the number of recoTracks in general
-  
-  
-  edm::View<reco::Track>::size_type numTracksN = numTracks->size();
-  for ( edm::View<reco::Track>::size_type i=0; i < numTracksN; i++ ) {
-
-    edm::RefToBase<reco::Track> track(numTracks, i);
-
-    rT++;
-    
-    //    bool isSigMatched(false);
-    //    bool isMatched(false);
-    //    bool isChargeMatched(true);
-
-    int numAssocRecoTracks = 0;
-    //    int tpbx = 0;
-    int nHits = 0;
-    double sharedFraction = 0.;
-    std::vector<std::pair<edm::RefToBase<reco::Track>, double> > tp;
-    if(reco2TOreco1Coll.find(track) != reco2TOreco1Coll.end()){
-      tp = reco1TOreco2Coll[track];
-      if (tp.size()!=0) {
-	nHits = tp[0].first->hitPattern().numberOfHits();
-	sharedFraction = tp[0].second;
-	std::cout << "nHits: " << nHits << " sharedFraction: " << sharedFraction << std::endl;
-	//	isMatched = true;
-	//        if (tp[0].first->charge() != track->charge()) 
-	//	  isChargeMatched = false;
-        if(reco1TOreco2Coll.find(tp[0].first) != reco1TOreco2Coll.end()) {
-	  numAssocRecoTracks = reco1TOreco2Coll[tp[0].first].size();
-	}
-        std::cout << numAssocRecoTracks << std::endl;
-	at++;
-	for (size_t tp_ite=0;tp_ite<tp.size();++tp_ite){
-	  reco::Track trackpart = *(tp[tp_ite].first);
-	}
-	edm::LogVerbatim("Track2TrackValidator") << "reco::Track #" << rT << " with pt=" << track->pt()
-						 << " associated with quality:" << tp.begin()->second <<"\n";
-      }
-    } else {
-      edm::LogVerbatim("Track2TrackValidator") << "reco::Track #" << rT << " with pt=" << track->pt()
-					       << " NOT associated to any TrackingParticle" << "\n";
-    }
-    
-    
-    //    histoHelper_->fill_generic_recoTrack_histos(w,*track,bs.position(),isSimMatched,isSigSimMatched, isChargeMatched, numAssocRecoTracks, puinfo.getPU_NumInteractions(), tpbx, nSimHits, sharedFraction);
-    
-
-    //Fill other histos
-    if (tp.size()==0) continue;
-    
-    //    histoHelper_->fill_simAssociated_recoTrack_histos(w,*track);
-    
-    edm::RefToBase<reco::Track> tpr = tp.begin()->first;
-    
-    //Get tracking particle parameters at point of closest approach to the beamline
-    reco::Track::Vector momentumTP = tpr->momentum();
-    reco::Track::Point vertexTP    = tpr->vertex();
-    int chargeTP = tpr->charge();
-    std::cout << "vertexTP: " << vertexTP << " chargeTP: " << chargeTP << " momentumTP: " << momentumTP << std::endl;
-
-    //    histoHelper_->fill_ResoAndPull_recoTrack_histos(w,momentumTP,vertexTP,chargeTP,
-    //							  *track,bs.position());
-    
-  } // end loop over tracks (numerator)
-  
-  //  histoHelper_->fill_trackBased_histos(w,at,rT,st);
   
   edm::LogVerbatim("Track2TrackValidator") << "Total tracks: "        << st << "\n"
 					   << "Total Associated: "    << ast << "\n"
@@ -349,7 +291,16 @@ Track2TrackValidator::bookHistograms(DQMStore::IBooker & ibooker,
 				     edm::Run const & iRun,
 				     edm::EventSetup const & iSetup)
 {
-  histoHelper_->bookHistos(ibooker);
+  
+  std::cout << "[Track2TrackValidator::bookHistograms]" << std::endl;
+
+  std::string dir = topDirName_;
+
+  histoHelper_->bookHistos(ibooker,numTracksMEs_,   "mon",    dir);
+  histoHelper_->bookHistos(ibooker,numassTracksMEs_,"mon_ass",dir);
+  histoHelper_->bookHistos(ibooker,denTracksMEs_,   "ref",    dir);
+  histoHelper_->bookHistos(ibooker,denassTracksMEs_,"ref_ass",dir);
+
 }
 
 void 
@@ -374,6 +325,27 @@ Track2TrackValidator::fillDescriptions(edm::ConfigurationDescriptions& descripti
   desc.setUnknown();
   descriptions.addDefault(desc);
 }
+
+void
+Track2TrackValidator::fillMap(reco::TrackCollection tracks1, reco::TrackCollection tracks2, idx2idxByDoubleColl& map)
+{
+  int i = 0;
+  for ( auto track1 : tracks1 ) {
+    std::map<double,int> tmp;
+    int j = 0;
+    for ( auto track2 : tracks2 ) {
+      double dR = reco::deltaR(track1.eta(),track1.phi(),track2.eta(),track2.phi());
+      tmp[dR] = j;
+      j++;
+    }
+    map.push_back(std::make_pair(i,tmp));
+    i++;
+  }
+  std::cout << "map: " << map.size() << "[tracks1: " << tracks1.size() << ", tracks2: " << tracks2.size() << "]" << std::endl;
+
+}
+
+
 
 //define this as a plug-in
 DEFINE_FWK_MODULE(Track2TrackValidator);
