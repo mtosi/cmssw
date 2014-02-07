@@ -8,73 +8,73 @@ HistoHelper::HistoHelper(const edm::ParameterSet& iConfig)
   : pset_ (iConfig)
 {
   //parameters for _vs_eta plots
-  minEta     = pset_.getParameter<double>("minEta");
-  maxEta     = pset_.getParameter<double>("maxEta");
-  nintEta    = pset_.getParameter<int>("nintEta");
-  useFabsEta = pset_.getParameter<bool>("useFabsEta");
+  minEta     = iConfig.getParameter<double>("minEta");
+  maxEta     = iConfig.getParameter<double>("maxEta");
+  nintEta    = iConfig.getParameter<int>("nintEta");
+  useFabsEta = iConfig.getParameter<bool>("useFabsEta");
 
   //parameters for _vs_pt plots
-  minPt    = pset_.getParameter<double>("minPt");
-  maxPt    = pset_.getParameter<double>("maxPt");
-  nintPt   = pset_.getParameter<int>("nintPt");
-  useInvPt = pset_.getParameter<bool>("useInvPt");
-  useLogPt = pset_.getUntrackedParameter<bool>("useLogPt",false);
+  minPt    = iConfig.getParameter<double>("minPt");
+  maxPt    = iConfig.getParameter<double>("maxPt");
+  nintPt   = iConfig.getParameter<int>("nintPt");
+  useInvPt = iConfig.getParameter<bool>("useInvPt");
+  useLogPt = iConfig.getUntrackedParameter<bool>("useLogPt",false);
 
   //parameters for _vs_Hit plots
-  minHit  = pset_.getParameter<double>("minHit");
-  maxHit  = pset_.getParameter<double>("maxHit");
-  nintHit = pset_.getParameter<int>("nintHit");
+  minHit  = iConfig.getParameter<double>("minHit");
+  maxHit  = iConfig.getParameter<double>("maxHit");
+  nintHit = iConfig.getParameter<int>("nintHit");
 
   //parameters for _vs_Layer plots
-  minLayers  = pset_.getParameter<double>("minLayers");
-  maxLayers  = pset_.getParameter<double>("maxLayers");
-  nintLayers = pset_.getParameter<int>("nintLayers");
+  minLayers  = iConfig.getParameter<double>("minLayers");
+  maxLayers  = iConfig.getParameter<double>("maxLayers");
+  nintLayers = iConfig.getParameter<int>("nintLayers");
 
   //parameters for _vs_phi plots
-  minPhi  = pset_.getParameter<double>("minPhi");
-  maxPhi  = pset_.getParameter<double>("maxPhi");
-  nintPhi = pset_.getParameter<int>("nintPhi");
+  minPhi  = iConfig.getParameter<double>("minPhi");
+  maxPhi  = iConfig.getParameter<double>("maxPhi");
+  nintPhi = iConfig.getParameter<int>("nintPhi");
 
   //parameters for _vs_Dxy plots
-  minDxy  = pset_.getParameter<double>("minDxy");
-  maxDxy  = pset_.getParameter<double>("maxDxy");
-  nintDxy = pset_.getParameter<int>("nintDxy");
+  minDxy  = iConfig.getParameter<double>("minDxy");
+  maxDxy  = iConfig.getParameter<double>("maxDxy");
+  nintDxy = iConfig.getParameter<int>("nintDxy");
 
   //parameters for _vs_Dz plots
-  minDz  = pset_.getParameter<double>("minDz");
-  maxDz  = pset_.getParameter<double>("maxDz");
-  nintDz = pset_.getParameter<int>("nintDz");
+  minDz  = iConfig.getParameter<double>("minDz");
+  maxDz  = iConfig.getParameter<double>("maxDz");
+  nintDz = iConfig.getParameter<int>("nintDz");
 
   //parameters for _vs_ProductionVertexTransvPosition plots
-  minVertpos  = pset_.getParameter<double>("minVertpos");
-  maxVertpos  = pset_.getParameter<double>("maxVertpos");
-  nintVertpos = pset_.getParameter<int>("nintVertpos");
+  minVertpos  = iConfig.getParameter<double>("minVertpos");
+  maxVertpos  = iConfig.getParameter<double>("maxVertpos");
+  nintVertpos = iConfig.getParameter<int>("nintVertpos");
 
   //parameters for _vs_ProductionVertexZPosition plots
-  minZpos  = pset_.getParameter<double>("minZpos");
-  maxZpos  = pset_.getParameter<double>("maxZpos");
-  nintZpos = pset_.getParameter<int>("nintZpos");
+  minZpos  = iConfig.getParameter<double>("minZpos");
+  maxZpos  = iConfig.getParameter<double>("maxZpos");
+  nintZpos = iConfig.getParameter<int>("nintZpos");
 
   //parameters for resolution plots
-  ptRes_rangeMin = pset_.getParameter<double>("ptRes_rangeMin");
-  ptRes_rangeMax = pset_.getParameter<double>("ptRes_rangeMax");
-  ptRes_nbin = pset_.getParameter<int>("ptRes_nbin");
+  ptRes_rangeMin = iConfig.getParameter<double>("ptRes_rangeMin");
+  ptRes_rangeMax = iConfig.getParameter<double>("ptRes_rangeMax");
+  ptRes_nbin = iConfig.getParameter<int>("ptRes_nbin");
 
-  phiRes_rangeMin = pset_.getParameter<double>("phiRes_rangeMin");
-  phiRes_rangeMax = pset_.getParameter<double>("phiRes_rangeMax");
-  phiRes_nbin = pset_.getParameter<int>("phiRes_nbin");
+  phiRes_rangeMin = iConfig.getParameter<double>("phiRes_rangeMin");
+  phiRes_rangeMax = iConfig.getParameter<double>("phiRes_rangeMax");
+  phiRes_nbin = iConfig.getParameter<int>("phiRes_nbin");
 
-  cotThetaRes_rangeMin = pset_.getParameter<double>("cotThetaRes_rangeMin");
-  cotThetaRes_rangeMax = pset_.getParameter<double>("cotThetaRes_rangeMax");
-  cotThetaRes_nbin = pset_.getParameter<int>("cotThetaRes_nbin");
+  cotThetaRes_rangeMin = iConfig.getParameter<double>("cotThetaRes_rangeMin");
+  cotThetaRes_rangeMax = iConfig.getParameter<double>("cotThetaRes_rangeMax");
+  cotThetaRes_nbin = iConfig.getParameter<int>("cotThetaRes_nbin");
 
-  dxyRes_rangeMin = pset_.getParameter<double>("dxyRes_rangeMin");
-  dxyRes_rangeMax = pset_.getParameter<double>("dxyRes_rangeMax");
-  dxyRes_nbin = pset_.getParameter<int>("dxyRes_nbin");
+  dxyRes_rangeMin = iConfig.getParameter<double>("dxyRes_rangeMin");
+  dxyRes_rangeMax = iConfig.getParameter<double>("dxyRes_rangeMax");
+  dxyRes_nbin = iConfig.getParameter<int>("dxyRes_nbin");
 
-  dzRes_rangeMin = pset_.getParameter<double>("dzRes_rangeMin");
-  dzRes_rangeMax = pset_.getParameter<double>("dzRes_rangeMax");
-  dzRes_nbin = pset_.getParameter<int>("dzRes_nbin");
+  dzRes_rangeMin = iConfig.getParameter<double>("dzRes_rangeMin");
+  dzRes_rangeMax = iConfig.getParameter<double>("dzRes_rangeMax");
+  dzRes_nbin = iConfig.getParameter<int>("dzRes_nbin");
 
   // fix for the LogScale
   if(useLogPt){
@@ -146,61 +146,6 @@ void HistoHelper::setUpVectors(){
     ZPOSintervals.push_back(d);
   }
 
-}
-void 
-HistoHelper::bookHistos(DQMStore::IBooker & ibooker, generalME& mes, TString label, std::string & dir){
-
-  book_generic_tracks_histos(ibooker,mes,label,dir);
-
-}
-
-void 
-HistoHelper::book_generic_tracks_histos(DQMStore::IBooker & ibooker, generalME& mes, TString label, std::string & dir){
-
-  ibooker.cd();
-  ibooker.setCurrentFolder(dir);
-
-  (mes.h_pt )      = ibooker.book1D(label+"_pt",       "track p_{T}",                               nintPt,  minPt,  maxPt   );
-  (mes.h_eta)      = ibooker.book1D(label+"_eta",      "track pseudorapidity",                     nintEta, minEta, maxEta   );
-  (mes.h_phi)      = ibooker.book1D(label+"_phi",      "track #phi",                               nintPhi, minPhi, maxPhi   );
-  (mes.h_dxy)      = ibooker.book1D(label+"_dxy",      "track transverse dca to beam spot",        nintDxy, minDxy, maxDxy   );
-  (mes.h_dz )      = ibooker.book1D(label+"_dz",       "track longitudinal dca to beam spot",       nintDz,  minDz,  maxDz   );
-  (mes.h_dxyWRTpv) = ibooker.book1D(label+"_dxyWRTpv", "track transverse dca to primary vertex",   nintDxy, minDxy, maxDxy   );
-  (mes.h_dzWRTpv)  = ibooker.book1D(label+"_dzWRTpv",  "track longitudinal dca to primary vertex",  nintDz,  minDz,  maxDz   );
-  (mes.h_charge)   = ibooker.book1D(label+"_charge",   "track charge",                                   5,   -2,        2   );
-  (mes.h_hits  )   = ibooker.book1D(label+"_hits",     "track number of hits",                          35,   -0.5,     34.5 );
-  (mes.h_dRmin)    = ibooker.book1D(label+"_dRmin",    "track min dR",                                 100,    0.,       0.01); 
-
-  (mes.h_pt_vs_eta)  = ibooker.book2D(label+"_ptVSeta","track p_{T} vs #eta", nintEta, minEta, maxEta, nintPt, minPt, maxPt);
-
-}
-
-
-void
-HistoHelper::fill_generic_tracks_histos(generalME& mes, reco::Track* trk, reco::BeamSpot* bs, reco::Vertex* pv) {
-
-  float pt       = trk->pt();
-  float eta      = trk->eta();
-  float phi      = trk->phi();
-  float dxy      = trk->dxy(bs->position());
-  float dz       = trk->dz(bs->position());
-  float dxyWRTpv = trk->dxy(pv->position());
-  float dzWRTpv  = trk->dz(pv->position());
-  float charge   = trk->charge();
-  float nhits    = trk->hitPattern().numberOfValidHits();
-
-  (mes.h_pt      ) -> Fill(pt);
-  (mes.h_eta     ) -> Fill(eta);
-  (mes.h_phi     ) -> Fill(phi);
-  (mes.h_dxy     ) -> Fill(dxy);
-  (mes.h_dz      ) -> Fill(dz);
-  (mes.h_dxyWRTpv) -> Fill(dxyWRTpv);
-  (mes.h_dzWRTpv ) -> Fill(dzWRTpv);
-  (mes.h_charge  ) -> Fill(charge);
-  (mes.h_hits    ) -> Fill(nhits);
-
-  (mes.h_pt_vs_eta) -> Fill(eta,pt);
-  
 }
 
 void HistoHelper::doProfileX(TH2 * th2, MonitorElement* me){
