@@ -1,0 +1,8 @@
+<use   name="DQMServices/Core"/>
+<use   name="DQM/TrackingMonitorSource"/>
+<use   name="FWCore/PluginManager"/>
+<use   name="FWCore/Framework"/>
+<use   name="boost"/>
+<library   file="*.cc" name="DQMTrackingMonitorSourcePlugins">
+  <flags   EDM_PLUGIN="1"/>
+</library>

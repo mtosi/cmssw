@@ -6,6 +6,7 @@
 <use   name="DataFormats/RecoCandidate"/>
 <use   name="DataFormats/TrackCandidate"/>
 <use   name="DataFormats/TrajectorySeed"/>
+<use   name="DataFormats/VertexReco"/>
 <use   name="MagneticField/Engine"/>
 <use   name="MagneticField/Records"/>
 <use   name="Geometry/Records"/>
