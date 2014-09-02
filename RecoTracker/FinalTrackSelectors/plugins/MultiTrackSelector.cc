@@ -316,8 +316,37 @@ void MultiTrackSelector::run( edm::Event& evt, const edm::EventSetup& es ) const
 
   // Cuts on numbers of layers with hits/3D hits/lost hits.
   uint32_t nlayers     = tk.hitPattern().trackerLayersWithMeasurement();
-  uint32_t nlayers3D   = tk.hitPattern().pixelLayersWithMeasurement() +
-    tk.hitPattern().numberOfValidStripLayersWithMonoAndStereo();
+  uint32_t nlayers3D   = tk.hitPattern().pixelLayersWithMeasurement();
+  //  nlayers3D += tk.hitPattern().numberOfValidStripLayersWithMonoAndStereo(); // this does not work @HLT, because it does not run the RecHitMatcher in the local reconstruction sequence
+  size_t count1D = 0;
+  size_t count3D = 0;
+  size_t countPIX = 0;
+  for ( auto it = tk.recHitsBegin(), et = tk.recHitsEnd(); it!=et; ++it) {
+    const TrackingRecHit* hit = it->get();
+    
+    if ( trackerHitRTTI::isUndef(*hit) ) continue;
+    
+    if ( hit->dimension()!=2 ) {
+      count1D++;
+    } else {
+      auto const & thit = static_cast<BaseTrackerRecHit const&>(*hit);
+      auto const & clus = thit.firstClusterRef();
+      if (clus.isPixel()) {
+	countPIX++;
+	continue;
+      }
+      else if (thit.isMatched()) {
+	count3D++;
+      } else  if (thit.isProjected()) {
+	count1D++;
+      } else {
+	count1D++;
+      }
+    }
+    
+  }
+  nlayers3D += count3D;
+  
   uint32_t nlayersLost = tk.hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::TRACK_HITS);
   LogDebug("TrackSelection") << "cuts on nlayers: " << nlayers << " " << nlayers3D << " " << nlayersLost << " vs " 
 			     << min_layers_[tsNum] << " " << min_3Dlayers_[tsNum] << " " << max_lostLayers_[tsNum];
