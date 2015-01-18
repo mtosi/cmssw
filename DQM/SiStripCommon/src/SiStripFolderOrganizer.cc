@@ -214,7 +214,6 @@ void SiStripFolderOrganizer::setDetectorFolder(uint32_t rawdetid, const TrackerT
 }
 
 void SiStripFolderOrganizer::getSubDetLayerFolderName(std::stringstream& ss, SiStripDetId::SubDetector subDet, uint32_t layer, uint32_t side){
-  //  std::cout << "[SiStripFolderOrganizer::getSubDetLayerFolderName] TopFolderName: " << TopFolderName << std::endl;
   ss << TopFolderName << SEP << MECHANICAL_FOLDER_NAME;
 
     std::stringstream sside;
@@ -385,7 +384,6 @@ void SiStripFolderOrganizer::setLayerFolder(uint32_t rawdetid, const TrackerTopo
   }
 
   lokal_folder += rest.str();
-  std::cout << "[SiStripFolderOrganizer::setLayerFolder] lokal_folder: " << lokal_folder << "(used by dbe_->setCurrentFolder)" << std::endl;
   dbe_->setCurrentFolder(lokal_folder);
 }
 
