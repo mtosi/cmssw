@@ -234,6 +234,27 @@ if (process.runType.getRunType() == process.runType.cosmic_run):
     process.DQMStore.referenceFileName = '/dqmdata/dqm/reference/sistrip_reference_cosmic.root'
     # Source config for cosmic data
     process.SiStripSources_TrkReco_cosmic = cms.Sequence(process.SiStripMonitorTrack_ckf*process.TrackMon_ckf)
+    ## TEMPORARY TEST FOR MONITORING tech bit 25 (2015.02.08)
+    process.bit25 = process.hltHighLevel.clone()
+    process.bit25.HLTPaths = cms.vstring('HLT_L1TrackerCosmics_*')
+
+    process.SiStripMonitorTrack_ckf_techBit25 = process.SiStripMonitorTrack_ckf.clone()
+    process.SiStripMonitorTrack_ckf_techBit25.TopFolderName = cms.string('SiStrip/techBit25')
+    process.SiStripMonitorTrack_ckf_techBit25.hltInputTag = cms.InputTag( "TriggerResults::HLT" )
+    process.SiStripMonitorTrack_ckf_techBit25.hltPaths = cms.vstring("HLT_L1TrackerCosmics_")
+    process.SiStripMonitorTrack_ckf_techBit25.errorReplyHlt = cms.bool(True)
+    process.SiStripMonitorTrack_ckf_techBit25.andOrHlt = cms.bool(True) # True:=OR; False:=AND
+
+    process.TrackMon_ckf_techBit25 = process.TrackMon_ckf.clone()
+    process.TrackMon_ckf_techBit25.FolderName = cms.string('Tracking/techBit25')
+    process.TrackMon_ckf_techBit25.hltInputTag = cms.InputTag( "TriggerResults::HLT" )
+    process.TrackMon_ckf_techBit25.hltPaths = cms.vstring("HLT_L1TrackerCosmics_")
+    process.TrackMon_ckf_techBit25.errorReplyHlt = cms.bool(True)
+    process.TrackMon_ckf_techBit25.andOrHlt = cms.bool(True) # True:=OR; False:=AND
+
+    process.SiStripSources_TrkReco_cosmic_techBit25 = cms.Sequence(process.SiStripMonitorTrack_ckf_techBit25*process.TrackMon_ckf_techBit25)
+    ########################################################################################################################
+
     # Client config for cosmic data
     ### STRIP
     process.load("DQM.SiStripMonitorClient.SiStripClientConfigP5_Cosmic_cff")
@@ -281,7 +302,9 @@ if (process.runType.getRunType() == process.runType.cosmic_run):
                          process.SiStripSources_LocalReco*
                          process.RecoForDQM_TrkReco_cosmic*
                          process.SiStripSources_TrkReco_cosmic*
-                         process.TrackingClient
+                         process.TrackingClient*
+                         process.bit25 *
+                         process.SiStripSources_TrkReco_cosmic_techBit25 ### TEMPORARY !
                          )
 
 
