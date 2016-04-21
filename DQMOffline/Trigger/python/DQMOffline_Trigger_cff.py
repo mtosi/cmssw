@@ -24,6 +24,9 @@ from DQMOffline.Trigger.HILowLumiHLTOfflineSource_cfi import *
 # Inclusive VBF
 from DQMOffline.Trigger.HLTInclusiveVBFSource_cfi import *
 
+# HLT paths monitoring vs BX
+from DQMOffline.Trigger.HLTpathsMonitoringVsBX_cff import *
+
 # tracking
 from DQMOffline.Trigger.TrackingMonitoring_cff import *
 
@@ -75,6 +78,7 @@ OfflineHLTMonitoring = cms.Sequence(
     dqmInfoHLTMon *
     sistripMonitorHLTsequence * 
     BTVHLTOfflineSource *
+    zeroBiasMonitoringVsBX *
     trackingMonitorHLT
     )
 
