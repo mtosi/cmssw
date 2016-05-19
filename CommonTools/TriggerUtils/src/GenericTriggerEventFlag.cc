@@ -125,6 +125,7 @@ GenericTriggerEventFlag::~GenericTriggerEventFlag()
 
   std::cout << "[GenericTriggerEventFlag::~GenericTriggerEventFlag] " << this << " onL1_: " << onL1_ << std::endl;
   if ( on_ ) delete watchDB_;
+  std::cout << "[GenericTriggerEventFlag::~GenericTriggerEventFlag] DONE" << std::endl;
 
 }
 
@@ -142,7 +143,7 @@ void GenericTriggerEventFlag::initRun( const edm::Run & run, const edm::EventSet
 
   //  std::cout << "watchDB_: " << ( watchDB_->check( setup ) ? "YEAP" : "NOPE" ) << std::endl;
 
-  //  if ( watchDB_->check( setup ) ) {
+  if ( watchDB_->check( setup ) ) {
     std::cout << "onGt_: " << (onGt_ ? "YEAP" : "NOPE" ) << " gtDBKey_.size: " << gtDBKey_.size() << std::endl;
     std::cout << "onL1_: " << (onL1_ ? "YEAP" : "NOPE" ) << " l1DBKey_.size: " << l1DBKey_.size() << std::endl;
     std::cout << "onHlt_: " << (onHlt_ ? "YEAP" : "NOPE" ) << " hltDBKey_.size: " << hltDBKey_.size() << std::endl;
@@ -163,7 +164,7 @@ void GenericTriggerEventFlag::initRun( const edm::Run & run, const edm::EventSet
       if ( exprs.empty() || exprs.at( 0 ) != configError_ ) hltLogicalExpressionsCache_ = exprs;
     }
     std::cout << "DONE w/ onHlt_" << std::endl;
-    //  }
+  }
 
   // Re-initialise starting valuse before wild-card expansion
   l1LogicalExpressions_  = l1LogicalExpressionsCache_;
