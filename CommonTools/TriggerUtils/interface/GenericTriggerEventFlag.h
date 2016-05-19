@@ -141,16 +141,14 @@ class GenericTriggerEventFlag {
 };
 
 template <typename T>
-GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & config, edm::ConsumesCollector && iC, T& module ) {
-  std::cout << "[GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & config, edm::ConsumesCollector && iC, T& module )]" << std::endl; 
-  GenericTriggerEventFlag(config, iC, module); 
-  std::cout << "[GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & config, edm::ConsumesCollector && iC, T& module )] DONE" << std::endl; 
+GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & config, edm::ConsumesCollector && iC, T& module ) :
+  GenericTriggerEventFlag(config, iC, module) {
 }
 
 template <typename T>
-GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & config, edm::ConsumesCollector & iC, T& module ) {
+GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & config, edm::ConsumesCollector & iC, T& module ) :
+  GenericTriggerEventFlag(config, iC) {
   std::cout << "[GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & config, edm::ConsumesCollector & iC, T& module )]" << std::endl; 
-  GenericTriggerEventFlag(config, iC);
   if ( config.exists( "andOrL1" ) ) 
     l1uGt_.reset(new l1t::L1TGlobalUtil());
   else
