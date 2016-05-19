@@ -30,7 +30,8 @@
 #include "DataFormats/L1GlobalTrigger/interface/L1GlobalTriggerReadoutRecord.h"
 #include "DataFormats/L1GlobalTrigger/interface/L1GlobalTriggerEvmReadoutRecord.h"
 #include "DataFormats/Scalers/interface/DcsStatus.h"
-#include "L1Trigger/GlobalTriggerAnalyzer/interface/L1GtUtils.h"
+//#include "L1Trigger/GlobalTriggerAnalyzer/interface/L1GtUtils.h"
+#include "L1Trigger/L1TGlobal/interface/L1TGlobalUtil.h"
 #include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
 
 #include <memory>
@@ -41,7 +42,7 @@ class GenericTriggerEventFlag {
 
     // Utility classes
     edm::ESWatcher< AlCaRecoTriggerBitsRcd > * watchDB_;
-    std::unique_ptr<L1GtUtils>                 l1Gt_;
+    std::unique_ptr<l1t::L1TGlobalUtil>        l1uGt_;
     HLTConfigProvider                          hltConfig_;
     bool                                       hltConfigInit_;
     // Configuration parameters
@@ -140,14 +141,21 @@ class GenericTriggerEventFlag {
 };
 
 template <typename T>
-GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & config, edm::ConsumesCollector && iC, T& module ) :
-  GenericTriggerEventFlag(config, iC, module) {
+GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & config, edm::ConsumesCollector && iC, T& module ) {
+  std::cout << "[GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & config, edm::ConsumesCollector && iC, T& module )]" << std::endl; 
+  GenericTriggerEventFlag(config, iC, module); 
+  std::cout << "[GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & config, edm::ConsumesCollector && iC, T& module )] DONE" << std::endl; 
 }
 
 template <typename T>
-GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & config, edm::ConsumesCollector & iC, T& module ) :
-  GenericTriggerEventFlag(config, iC) {
-    l1Gt_.reset(new L1GtUtils(config, iC, false, module));
+GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & config, edm::ConsumesCollector & iC, T& module ) {
+  std::cout << "[GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & config, edm::ConsumesCollector & iC, T& module )]" << std::endl; 
+  GenericTriggerEventFlag(config, iC);
+  if ( config.exists( "andOrL1" ) ) 
+    l1uGt_.reset(new l1t::L1TGlobalUtil());
+  else
+    l1uGt_.reset(NULL);
+  std::cout << "[GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & config, edm::ConsumesCollector & iC, T& module )] DONE" << std::endl; 
 }
 
 #endif
