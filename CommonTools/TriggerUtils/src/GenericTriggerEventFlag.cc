@@ -94,16 +94,8 @@ GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & conf
       errorReplyL1_              = config.getParameter< bool >( "errorReplyL1" );
       if ( config.exists( "l1DBKey" ) )      l1DBKey_      = config.getParameter< std::string >( "l1DBKey" );
       if ( config.exists( "l1BeforeMask" ) ) l1BeforeMask_ = config.getParameter< bool >( "l1BeforeMask" );
-      std::cout << "[GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & config, edm::ConsumesCollector & iC )]: before reset" << std::endl;
-      l1uGt_.reset(new l1t::L1TGlobalUtil());
-      //      l1uGt_ = new l1t::L1TGlobalUtil();
-      std::cout << "[GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & config, edm::ConsumesCollector & iC )]: after reset" << std::endl;
     } else {
       onL1_ = false;
-      std::cout << "[GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & config, edm::ConsumesCollector & iC )]: before reset NULL" << std::endl;
-      l1uGt_.reset(NULL);
-      //      l1uGt_ = NULL;
-      std::cout << "[GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & config, edm::ConsumesCollector & iC )]: after reset NULL" << std::endl;
     }
     if ( config.exists( "andOrHlt" ) ) {
       andOrHlt_                   = config.getParameter< bool >( "andOrHlt" );
@@ -122,6 +114,7 @@ GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & conf
     }
   }
   std::cout << "[GenericTriggerEventFlag::GenericTriggerEventFlag] ( const edm::ParameterSet & config, edm::ConsumesCollector & iC )] watchDB_: " << watchDB_ << std::endl;
+  std::cout << "[GenericTriggerEventFlag::GenericTriggerEventFlag] ( const edm::ParameterSet & config, edm::ConsumesCollector & iC )] onL1_: " << onL1_ << std::endl;
   std::cout << "[GenericTriggerEventFlag::GenericTriggerEventFlag] ( const edm::ParameterSet & config, edm::ConsumesCollector & iC )] DONE" << std::endl;
 }
 
@@ -130,6 +123,7 @@ GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & conf
 GenericTriggerEventFlag::~GenericTriggerEventFlag()
 {
 
+  std::cout << "[GenericTriggerEventFlag::~GenericTriggerEventFlag] " << this << " onL1_: " << onL1_ << std::endl;
   if ( on_ ) delete watchDB_;
 
 }
