@@ -63,6 +63,8 @@ class GenericTriggerEventFlag {
     std::vector< std::string > gtLogicalExpressions_;
     bool                       errorReplyGt_;
     bool                       andOrL1_;
+    edm::InputTag              l1AlgoInputTag_;
+    edm::EDGetToken            l1AlgoInputToken_;
     bool                       l1BeforeMask_;
     std::string                l1DBKey_;
     std::vector< std::string > l1LogicalExpressionsCache_;
@@ -118,7 +120,7 @@ class GenericTriggerEventFlag {
 
     // L1
     bool acceptL1( const edm::Event & event, const edm::EventSetup & setup );
-    bool acceptL1LogicalExpression( const edm::Event & event, std::string l1LogicalExpression );
+    bool acceptL1LogicalExpression( const edm::Event & event, const edm::EventSetup & setup, std::string l1LogicalExpression );
 
     // HLT
     bool acceptHlt( const edm::Event & event );
@@ -148,12 +150,10 @@ GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & conf
 template <typename T>
 GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & config, edm::ConsumesCollector & iC, T& module ) :
   GenericTriggerEventFlag(config, iC) {
-  std::cout << "[GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & config, edm::ConsumesCollector & iC, T& module )]" << std::endl; 
   if ( config.exists( "andOrL1" ) ) 
     l1uGt_.reset(new l1t::L1TGlobalUtil());
   else
     l1uGt_.reset(NULL);
-  std::cout << "[GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & config, edm::ConsumesCollector & iC, T& module )] DONE" << std::endl; 
 }
 
 #endif
