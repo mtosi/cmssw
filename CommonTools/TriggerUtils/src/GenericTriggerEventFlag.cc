@@ -148,7 +148,6 @@ void GenericTriggerEventFlag::initRun( const edm::Run & run, const edm::EventSet
   // Re-initialise starting valuse before wild-card expansion
   l1LogicalExpressions_  = l1LogicalExpressionsCache_;
   hltLogicalExpressions_ = hltLogicalExpressionsCache_;
-  std::cout << "[GenericTriggerEventFlag::initRun] 1. l1LogicalExpressions_: " << l1LogicalExpressions_.size() << std::endl;
 
   hltConfigInit_ = false;
   if ( onHlt_ ) {
@@ -176,27 +175,27 @@ void GenericTriggerEventFlag::initRun( const edm::Run & run, const edm::EventSet
     const std::vector<std::pair<std::string, int> >  prescales = l1uGt_->prescales();
     for(auto ip : prescales) 
       algoNames.push_back(ip.first);
-    std::cout << "[GenericTriggerEventFlag::initRun] algoName (L1TGlobalUtil): " << algoNames.size() << std::endl;
 
-    std::cout << "[GenericTriggerEventFlag::initRun] 2. l1LogicalExpressions_.size: "  << l1LogicalExpressions_.size() << std::endl;
     for ( unsigned iExpr = 0; iExpr < l1LogicalExpressions_.size(); ++iExpr ) {
       std::string l1LogicalExpression( l1LogicalExpressions_.at( iExpr ) );
       L1GtLogicParser l1AlgoLogicParser( l1LogicalExpression );
       // Loop over algorithms
       for ( size_t iAlgo = 0; iAlgo < l1AlgoLogicParser.operandTokenVector().size(); ++iAlgo ) {
         const std::string l1AlgoName( l1AlgoLogicParser.operandTokenVector().at( iAlgo ).tokenName );
-	std::cout << "l1AlgoName: " << l1AlgoName << std::endl;
         if ( l1AlgoName.find( '*' ) != std::string::npos ) {
-	  std::cout << "found '*'" << std::endl;
           l1LogicalExpression.replace( l1LogicalExpression.find( l1AlgoName ), l1AlgoName.size(), expandLogicalExpression( algoNames, l1AlgoName ) );
         }
       }
-      std::cout << "iExpr: " << iExpr << " l1LogicalExpression: " << l1LogicalExpression << std::endl;
       l1LogicalExpressions_[ iExpr ] = l1LogicalExpression;
     }
+    std::vector<std::string> tmp = l1LogicalExpressions_; 
+    for ( unsigned iExpr = 0; iExpr < tmp.size(); ++iExpr ) 
+      if ( std::find(algoNames.begin(),algoNames.end(),tmp[ iExpr ]) == algoNames.end() ) {
+	l1LogicalExpressions_.erase(l1LogicalExpressions_.begin()+iExpr);
+	if ( verbose_ > 1 )
+	  edm::LogWarning( "GenericTriggerEventFlag" ) << "L1 algorithm \"" << tmp[ iExpr ] << "\" does not exist in the L1 menu ==> drop it from the list of l1LogicalExpressions";
+      }
   }
-  std::cout << "[GenericTriggerEventFlag::initRun] l1LogicalExpressions_: " << l1LogicalExpressions_.size() << std::endl;
-
   // HLT
   if ( hltConfigInit_ ) {
     for ( unsigned iExpr = 0; iExpr < hltLogicalExpressions_.size(); ++iExpr ) {
@@ -410,15 +409,12 @@ bool GenericTriggerEventFlag::acceptL1( const edm::Event & event, const edm::Eve
 
   // Determine decision of L1 logical expression combination and return
   if ( andOrL1_ ) { // OR combination
-    std::cout << "[GenericTriggerEventFlag::acceptL1] l1LogicalExpressions_.size(): " << l1LogicalExpressions_.size() << std::endl;
     for ( std::vector< std::string >::const_iterator l1LogicalExpression = l1LogicalExpressions_.begin(); l1LogicalExpression != l1LogicalExpressions_.end(); ++l1LogicalExpression ) {
-      std::cout << "testing: " << *l1LogicalExpression << std::endl;
       if ( acceptL1LogicalExpression( event, setup, *l1LogicalExpression ) ) return true;
     }
     return false;
   }
   for ( std::vector< std::string >::const_iterator l1LogicalExpression = l1LogicalExpressions_.begin(); l1LogicalExpression != l1LogicalExpressions_.end(); ++l1LogicalExpression ) {
-      std::cout << "testing: !" << *l1LogicalExpression << std::endl;
     if ( ! acceptL1LogicalExpression( event, setup, *l1LogicalExpression ) ) return false;
   }
   return true;
@@ -440,7 +436,6 @@ bool GenericTriggerEventFlag::acceptL1LogicalExpression( const edm::Event & even
 
   // Negated logical expression
   bool negExpr( negate( l1LogicalExpression ) );
-  std::cout << "negExpr: " << negExpr << std::endl;
   if ( negExpr && l1LogicalExpression.empty() ) {
     if ( verbose_ > 1 ) edm::LogWarning( "GenericTriggerEventFlag" ) << "Empty (negated) logical expression ==> decision: " << errorReplyL1_;
     return errorReplyL1_;
@@ -449,29 +444,25 @@ bool GenericTriggerEventFlag::acceptL1LogicalExpression( const edm::Event & even
   // Parse logical expression and determine L1 decision
   L1GtLogicParser l1AlgoLogicParser( l1LogicalExpression );
   // Loop over algorithms
-  std::cout << "[GenericTriggerEventFlag::acceptL1LogicalExpression] l1AlgoLogicParser.operandTokenVector().size(): " << l1AlgoLogicParser.operandTokenVector().size() << std::endl;
   for ( size_t iAlgorithm = 0; iAlgorithm < l1AlgoLogicParser.operandTokenVector().size(); ++iAlgorithm ) {
     const std::string l1AlgoName( l1AlgoLogicParser.operandTokenVector().at( iAlgorithm ).tokenName );
 
     bool decision = false;    
     bool errorBOOL = (l1BeforeMask_ ? l1uGt_->getInitialDecisionByName(l1AlgoName,decision) : l1uGt_->getFinalDecisionByName(l1AlgoName,decision) );
 
-    std::cout << "[GenericTriggerEventFlag::acceptL1LogicalExpression] decision (L1TGlobalUtil): " << decision << std::endl;
     // Error checks
     if ( !errorBOOL ) { 
       if ( verbose_ > 1 )
-        edm::LogWarning( "GenericTriggerEventFlag" ) << "L1 algorithm \"" << l1AlgoName << "\" does not exist in the L1 menu ==> decision: "                                          << errorReplyL1_;
+        edm::LogWarning( "GenericTriggerEventFlag" ) << "L1 algorithm \"" << l1AlgoName << "\" does not exist in the L1 menu ==> decision: " << errorReplyL1_;
       l1AlgoLogicParser.operandTokenVector().at( iAlgorithm ).tokenResult = errorReplyL1_;
       continue;
     }
     // Manipulate algo decision as stored in the parser
     l1AlgoLogicParser.operandTokenVector().at( iAlgorithm ).tokenResult = decision;
-    std::cout << "l1AlgoLogicParser.operandTokenVector().at( iAlgorithm ).tokenResult: " << l1AlgoLogicParser.operandTokenVector().at( iAlgorithm ).tokenResult << std::endl;
   }
 
   // Return decision
   const bool l1Decision( l1AlgoLogicParser.expressionResult() );
-  std::cout << "returning .. " << ( (negExpr ? ( ! l1Decision ) : l1Decision) ? "OK" : "KO" ) << std::endl;
   return negExpr ? ( ! l1Decision ) : l1Decision;
 
 }
