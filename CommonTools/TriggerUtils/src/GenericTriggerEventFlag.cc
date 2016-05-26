@@ -91,9 +91,11 @@ GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & conf
     if ( config.exists( "andOrL1" ) ) {
       andOrL1_                   = config.getParameter< bool >( "andOrL1" );
       if ( config.exists( "stage2" ) ) {
-	stage2_ = true;
-	l1AlgoInputTag_   = config.getUntrackedParameter<edm::InputTag>("l1AlgoInputTag",edm::InputTag("gtStage2Digis"));
-	l1AlgoInputToken_ = iC.mayConsume<BXVector<GlobalAlgBlk>>( l1AlgoInputTag_ );
+	stage2_ = config.getParameter< bool> ( "stage2" );
+	if ( stage2_ ) {
+	  l1AlgoInputTag_   = config.getUntrackedParameter<edm::InputTag>("l1AlgoInputTag",edm::InputTag("gtStage2Digis"));
+	  l1AlgoInputToken_ = iC.mayConsume<BXVector<GlobalAlgBlk>>( l1AlgoInputTag_ );
+	}
       } else
 	stage2_ = false;
       l1LogicalExpressionsCache_ = config.getParameter< std::vector< std::string > >( "l1Algorithms" );
