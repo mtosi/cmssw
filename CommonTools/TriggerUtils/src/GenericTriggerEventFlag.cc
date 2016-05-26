@@ -36,6 +36,7 @@ GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & conf
   , gtDBKey_( "" )
   , errorReplyGt_( false )
   , andOrL1_( false )
+  , stage2_( false )
   , l1BeforeMask_( true )
   , l1DBKey_( "" )
   , errorReplyL1_( false )
@@ -89,8 +90,12 @@ GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & conf
     }
     if ( config.exists( "andOrL1" ) ) {
       andOrL1_                   = config.getParameter< bool >( "andOrL1" );
-      l1AlgoInputTag_            = config.getUntrackedParameter<edm::InputTag>("l1AlgoInputTag",edm::InputTag("gtStage2Digis"));
-      l1AlgoInputToken_          = iC.mayConsume<BXVector<GlobalAlgBlk>>( l1AlgoInputTag_ );
+      if ( config.exists( "stage2" ) ) {
+	stage2_ = true;
+	l1AlgoInputTag_   = config.getUntrackedParameter<edm::InputTag>("l1AlgoInputTag",edm::InputTag("gtStage2Digis"));
+	l1AlgoInputToken_ = iC.mayConsume<BXVector<GlobalAlgBlk>>( l1AlgoInputTag_ );
+      } else
+	stage2_ = false;
       l1LogicalExpressionsCache_ = config.getParameter< std::vector< std::string > >( "l1Algorithms" );
       errorReplyL1_              = config.getParameter< bool >( "errorReplyL1" );
       if ( config.exists( "l1DBKey" ) )      l1DBKey_      = config.getParameter< std::string >( "l1DBKey" );
@@ -114,6 +119,7 @@ GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & conf
       watchDB_ = new edm::ESWatcher< AlCaRecoTriggerBitsRcd >;
     }
   }
+
 }
 
 
@@ -169,12 +175,29 @@ void GenericTriggerEventFlag::initRun( const edm::Run & run, const edm::EventSet
     // build vector of algo names
 
     std::vector< std::string > algoNames;
-    l1uGt_->retrieveL1Run(setup);
 
-    l1uGt_->retrieveL1LumiBlock(setup);
-    const std::vector<std::pair<std::string, int> >  prescales = l1uGt_->prescales();
-    for(auto ip : prescales) 
-      algoNames.push_back(ip.first);
+    if (stage2_) {
+      l1uGt_->retrieveL1Run(setup);
+
+      l1uGt_->retrieveL1LumiBlock(setup);
+      const std::vector<std::pair<std::string, int> >  prescales = l1uGt_->prescales();
+      for(auto ip : prescales) 
+	algoNames.push_back(ip.first);
+    } else {
+      l1Gt_->getL1GtRunCache( run, setup, useL1EventSetup, useL1GtTriggerMenuLite );
+      edm::ESHandle< L1GtTriggerMenu > handleL1GtTriggerMenu;
+      setup.get< L1GtTriggerMenuRcd >().get( handleL1GtTriggerMenu );
+
+      const AlgorithmMap l1GtPhys( handleL1GtTriggerMenu->gtAlgorithmMap() );
+      for ( CItAlgo iAlgo = l1GtPhys.begin(); iAlgo != l1GtPhys.end(); ++iAlgo ) {
+	algoNames.push_back( iAlgo->second.algoName() );
+      }
+      const AlgorithmMap l1GtTech( handleL1GtTriggerMenu->gtTechnicalTriggerMap() );
+      for ( CItAlgo iAlgo = l1GtTech.begin(); iAlgo != l1GtTech.end(); ++iAlgo ) {
+	algoNames.push_back( iAlgo->second.algoName() );
+      }
+    }
+
 
     for ( unsigned iExpr = 0; iExpr < l1LogicalExpressions_.size(); ++iExpr ) {
       std::string l1LogicalExpression( l1LogicalExpressions_.at( iExpr ) );
@@ -404,9 +427,6 @@ bool GenericTriggerEventFlag::acceptL1( const edm::Event & event, const edm::Eve
   // An empty L1 logical expressions list acts as switch.
   if ( ! onL1_ || l1LogicalExpressions_.empty() ) return ( ! andOr_ ); // logically neutral, depending on base logical connective
 
-  // Getting the L1 event setup
-  //  l1Gt_->getL1GtRunCache( event, setup, useL1EventSetup, useL1GtTriggerMenuLite ); // FIXME This can possibly go to initRun()
-
   // Determine decision of L1 logical expression combination and return
   if ( andOrL1_ ) { // OR combination
     for ( std::vector< std::string >::const_iterator l1LogicalExpression = l1LogicalExpressions_.begin(); l1LogicalExpression != l1LogicalExpressions_.end(); ++l1LogicalExpression ) {
@@ -426,7 +446,12 @@ bool GenericTriggerEventFlag::acceptL1( const edm::Event & event, const edm::Eve
 bool GenericTriggerEventFlag::acceptL1LogicalExpression( const edm::Event & event, const edm::EventSetup & setup, std::string l1LogicalExpression )
 {
 
-  l1uGt_->retrieveL1(event,setup,l1AlgoInputToken_);
+  // Getting the L1 event setup
+  if ( stage2_ )
+    l1uGt_->retrieveL1(event,setup,l1AlgoInputToken_);
+  else
+    l1Gt_->getL1GtRunCache( event, setup, useL1EventSetup, useL1GtTriggerMenuLite ); // FIXME This can possibly go to initRun()
+
 
   // Check empty std::strings
   if ( l1LogicalExpression.empty() ) {
@@ -447,11 +472,24 @@ bool GenericTriggerEventFlag::acceptL1LogicalExpression( const edm::Event & even
   for ( size_t iAlgorithm = 0; iAlgorithm < l1AlgoLogicParser.operandTokenVector().size(); ++iAlgorithm ) {
     const std::string l1AlgoName( l1AlgoLogicParser.operandTokenVector().at( iAlgorithm ).tokenName );
 
+    
     bool decision = false;    
-    bool errorBOOL = (l1BeforeMask_ ? l1uGt_->getInitialDecisionByName(l1AlgoName,decision) : l1uGt_->getFinalDecisionByName(l1AlgoName,decision) );
+    bool error = false;
+    if ( stage2_ ) {
+      bool errorBOOL = (l1BeforeMask_ ? l1uGt_->getInitialDecisionByName(l1AlgoName,decision) : l1uGt_->getFinalDecisionByName(l1AlgoName,decision) );
+      error = !errorBOOL;
+    } else {
+      int errorINT( -1 );
+      //      const bool decision( l1BeforeMask_ ? l1Gt_->decisionBeforeMask( event, l1AlgoName, errorINT ) : l1Gt_->decisionAfterMask( event, l1AlgoName, errorINT ) );
+      decision = ( l1BeforeMask_ ? l1Gt_->decisionBeforeMask( event, l1AlgoName, errorINT ) : l1Gt_->decisionAfterMask( event, l1AlgoName, errorINT ) );
+      error = ( errorINT != 0 );
+      if ( errorINT > 1 ) 
+	if ( verbose_ > 1 )
+	  edm::LogWarning( "GenericTriggerEventFlag" ) << "L1 algorithm \"" << l1AlgoName << "\" received error code " << error << " from L1GtUtils::decisionBeforeMask ==> decision: " << errorReplyL1_;
+    }
 
     // Error checks
-    if ( !errorBOOL ) { 
+    if ( error ) { 
       if ( verbose_ > 1 )
         edm::LogWarning( "GenericTriggerEventFlag" ) << "L1 algorithm \"" << l1AlgoName << "\" does not exist in the L1 menu ==> decision: " << errorReplyL1_;
       l1AlgoLogicParser.operandTokenVector().at( iAlgorithm ).tokenResult = errorReplyL1_;
@@ -608,8 +646,7 @@ bool GenericTriggerEventFlag::negate( std::string & word ) const
 
 /// Reads and returns logical expressions from DB
 std::vector< std::string > GenericTriggerEventFlag::expressionsFromDB( const std::string & key, const edm::EventSetup & setup )
-{
-  
+{  
   if ( key.size() == 0 ) return std::vector< std::string >( 1, emptyKeyError_ );
   edm::ESHandle< AlCaRecoTriggerBits > logicalExpressions;
   std::vector< edm::eventsetup::DataKey > labels;

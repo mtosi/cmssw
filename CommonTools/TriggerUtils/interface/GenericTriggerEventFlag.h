@@ -30,7 +30,7 @@
 #include "DataFormats/L1GlobalTrigger/interface/L1GlobalTriggerReadoutRecord.h"
 #include "DataFormats/L1GlobalTrigger/interface/L1GlobalTriggerEvmReadoutRecord.h"
 #include "DataFormats/Scalers/interface/DcsStatus.h"
-//#include "L1Trigger/GlobalTriggerAnalyzer/interface/L1GtUtils.h"
+#include "L1Trigger/GlobalTriggerAnalyzer/interface/L1GtUtils.h"
 #include "L1Trigger/L1TGlobal/interface/L1TGlobalUtil.h"
 #include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
 
@@ -42,6 +42,7 @@ class GenericTriggerEventFlag {
 
     // Utility classes
     edm::ESWatcher< AlCaRecoTriggerBitsRcd > * watchDB_;
+    std::unique_ptr<L1GtUtils>                 l1Gt_;
     std::unique_ptr<l1t::L1TGlobalUtil>        l1uGt_;
     HLTConfigProvider                          hltConfig_;
     bool                                       hltConfigInit_;
@@ -63,6 +64,7 @@ class GenericTriggerEventFlag {
     std::vector< std::string > gtLogicalExpressions_;
     bool                       errorReplyGt_;
     bool                       andOrL1_;
+    bool                       stage2_;
     edm::InputTag              l1AlgoInputTag_;
     edm::EDGetToken            l1AlgoInputToken_;
     bool                       l1BeforeMask_;
@@ -151,9 +153,14 @@ template <typename T>
 GenericTriggerEventFlag::GenericTriggerEventFlag( const edm::ParameterSet & config, edm::ConsumesCollector & iC, T& module ) :
   GenericTriggerEventFlag(config, iC) {
   if ( config.exists( "andOrL1" ) ) 
-    l1uGt_.reset(new l1t::L1TGlobalUtil());
-  else
+    if (stage2_)
+      l1uGt_.reset(new l1t::L1TGlobalUtil());
+    else
+      l1Gt_.reset(new L1GtUtils(config, iC, false, module));
+  else {
     l1uGt_.reset(NULL);
+    l1Gt_.reset(NULL);
+  }
 }
 
 #endif
