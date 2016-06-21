@@ -10,35 +10,75 @@
 // -----------------------------
 
 LumiMonitor::LumiMonitor( const edm::ParameterSet& iConfig ) : 
-  conf_(iConfig) 
-  , doPixelLumi_                  ( conf_.getParameter<bool>  ("doPixelLumi")                 )
-  , useBPixLayer1_                ( conf_.getParameter<bool>  ("useBPixLayer1")               )
-  , minNumberOfPixelsPerCluster_  ( conf_.getParameter<int>   ("minNumberOfPixelsPerCluster") )
-  , minPixelClusterCharge_        ( conf_.getParameter<double>("minPixelClusterCharge")       )
-  
+  folderName_                     ( iConfig.getParameter<std::string>("FolderName")                  )
+  , pixelClustersToken_           ( mayConsume<edmNew::DetSetVector<SiPixelCluster> >(iConfig.getParameter<edm::InputTag>("pixelClusters") ) )
+  , lumiScalersToken_             ( consumes<LumiScalersCollection>                  (iConfig.getParameter<edm::InputTag>("scalers")       ) ) 
+  , doPixelLumi_                  ( iConfig.getParameter<bool>       ("doPixelLumi")                 )
+  , useBPixLayer1_                ( iConfig.getParameter<bool>       ("useBPixLayer1")               )
+  , minNumberOfPixelsPerCluster_  ( iConfig.getParameter<int>        ("minNumberOfPixelsPerCluster") )
+  , minPixelClusterCharge_        ( iConfig.getParameter<double>     ("minPixelClusterCharge")       )
 {
 
-  folderName_ = conf_.getParameter<std::string>("FolderName");
-
-  pixelClustersToken_ = mayConsume<edmNew::DetSetVector<SiPixelCluster> >(conf_.getParameter<edm::InputTag>("pixelClusters"));
-  lumiscalersToken_   = mayConsume<LumiScalersCollection>(conf_.getParameter<edm::InputTag>("scalers"));
-
-  numberOfPixelClustersVsLS_   = NULL;
-  numberOfPixelClustersVsLumi_ = NULL;
-  lumiVsLS_                    = NULL;
-  pixelLumiVsLS_               = NULL;
-  pixelLumiVsLumi_             = NULL;
+  numberOfPixelClustersVsLS_   = nullptr;
+  numberOfPixelClustersVsLumi_ = nullptr;
+  lumiVsLS_                    = nullptr;
+  pixelLumiVsLS_               = nullptr;
+  pixelLumiVsLumi_             = nullptr;
 
   if(useBPixLayer1_) 
     lumi_factor_per_bx_ = GetLumi::FREQ_ORBIT * GetLumi::SECONDS_PER_LS / GetLumi::XSEC_PIXEL_CLUSTER  ;
   else
     lumi_factor_per_bx_ = GetLumi::FREQ_ORBIT * GetLumi::SECONDS_PER_LS / GetLumi::rXSEC_PIXEL_CLUSTER  ;
 
+  edm::ParameterSet histoPSet        = iConfig.getParameter<edm::ParameterSet>("histoPSet");
+  edm::ParameterSet pixelClusterPSet = histoPSet.getParameter<edm::ParameterSet>("pixelClusterPSet");
+  edm::ParameterSet lumiPSet         = histoPSet.getParameter<edm::ParameterSet>("lumiPSet");
+  edm::ParameterSet pixellumiPSet    = histoPSet.getParameter<edm::ParameterSet>("pixellumiPSet");
+  edm::ParameterSet lsPSet           = histoPSet.getParameter<edm::ParameterSet>("lsPSet");
 
+  /*
+  pixelCluster_binning_(pixelClusterPSet.getParameter<int32_t>("nbins"), pixelClusterPSet.getParameter<double>("xmin"), pixelClusterPSet.getParameter<double>("xmax"));
+  lumi_binning_        (lumiPSet.getParameter<int32_t>        ("nbins"), lumiPSet.getParameter<double>        ("xmin"), lumiPSet.getParameter<double>        ("xmax"));
+  pixellumi_binning_   (pixellumiPSet.getParameter<int32_t>   ("nbins"), pixellumiPSet.getParameter<double>   ("xmin"), pixellumiPSet.getParameter<double>   ("xmax"));
+  ls_binning_          (lsPSet.getParameter<int32_t>          ("nbins"), lsPSet.getParameter<double>          ("xmin"), lsPSet.getParameter<double>          ("xmax"));
+  */
+
+  getHistoPSet  (pixellumiPSet,   pixellumi_binning_);
+  getHistoPSet  (pixelClusterPSet,pixelCluster_binning_);
+  getHistoPSet  (lumiPSet,        lumi_binning_);
+  getHistoLSPSet(lsPSet,          ls_binning_);
+
+  /*
+  pixellumi_binning_.nbins = pixellumiPSet.getParameter<int32_t>("nbins");
+  pixellumi_binning_.xmin  = pixellumiPSet.getParameter<double>("xmin");
+  pixellumi_binning_.xmax  = pixellumiPSet.getParameter<double>("xmax");
+
+  pixelCluster_binning_.nbins = pixelClusterPSet.getParameter<int32_t>("nbins");
+  pixelCluster_binning_.xmin  = pixelClusterPSet.getParameter<double>("xmin");
+  pixelCluster_binning_.xmax  = pixelClusterPSet.getParameter<double>("xmax");
+
+  lumi_binning_.nbins = lumiPSet.getParameter<int32_t>("nbins");
+  lumi_binning_.xmin  = lumiPSet.getParameter<double>("xmin");
+  lumi_binning_.xmax  = lumiPSet.getParameter<double>("xmax");
+
+  ls_binning_.nbins = lsPSet.getParameter<int32_t>("nbins");
+  ls_binning_.xmin  = lsPSet.getParameter<double>("xmin");
+  ls_binning_.xmax  = lsPSet.getParameter<double>("xmax");
+  */
 }
 
-LumiMonitor::~LumiMonitor() {
+void LumiMonitor::getHistoPSet(edm::ParameterSet& pset, MEbinning& mebinning)
+{
+  mebinning.nbins = pset.getParameter<int32_t>("nbins");
+  mebinning.xmin  = pset.getParameter<double>("xmin");
+  mebinning.xmax  = pset.getParameter<double>("xmax");
+}
 
+void LumiMonitor::getHistoLSPSet(edm::ParameterSet& pset, MEbinning& mebinning)
+{
+  mebinning.nbins = pset.getParameter<int32_t>("nbins");
+  mebinning.xmin  = 0.;
+  mebinning.xmax  = double(pset.getParameter<double>("nbins"));
 }
 
 void LumiMonitor::bookHistograms(DQMStore::IBooker     & ibooker,
@@ -48,53 +88,47 @@ void LumiMonitor::bookHistograms(DQMStore::IBooker     & ibooker,
   
   std::string histname, histtitle;
 
-  edm::ParameterSet histoPSet        = conf_.getParameter<edm::ParameterSet>("histoPSet");
-  edm::ParameterSet pixelClusterPSet = histoPSet.getParameter<edm::ParameterSet>("pixelClusterPSet");
-  edm::ParameterSet lumiPSet         = histoPSet.getParameter<edm::ParameterSet>("lumiPSet");
-  edm::ParameterSet pixellumiPSet    = histoPSet.getParameter<edm::ParameterSet>("pixellumiPSet");
-  edm::ParameterSet lsPSet           = histoPSet.getParameter<edm::ParameterSet>("lsPSet");
-
   std::string currentFolder = folderName_ ;
   ibooker.setCurrentFolder(currentFolder.c_str());
 
   if ( doPixelLumi_ ) {
     histname = "numberOfPixelClustersVsLS"; histtitle = "number of pixel clusters vs LS";
     numberOfPixelClustersVsLS_ = ibooker.book1D(histname, histtitle, 
-						lsPSet.getParameter<int32_t>("nbins"), 0., double(lsPSet.getParameter<int32_t>("nbins")));
+						ls_binning_.nbins, ls_binning_.xmin, ls_binning_.xmax);
     //    numberOfPixelClustersVsLS_->getTH1()->SetCanExtend(TH1::kAllAxes);
     numberOfPixelClustersVsLS_->setAxisTitle("LS",1);
     numberOfPixelClustersVsLS_->setAxisTitle("number of pixel clusters",2);
     
-    histname = "numberOfPixelClustersVsLumi"; histtitle = "number of pixel clusters vs lumi";
+    histname = "numberOfPixelClustersVsLumi"; histtitle = "number of pixel clusters vs scal lumi";
     numberOfPixelClustersVsLumi_ = ibooker.bookProfile(histname, histtitle, 
-						       lumiPSet.getParameter<int32_t>("nbins"), lumiPSet.getParameter<double>("xmin"), lumiPSet.getParameter<double>("xmax"),
-						       pixelClusterPSet.getParameter<double>("xmin"), pixelClusterPSet.getParameter<double>("xmax"));
-    numberOfPixelClustersVsLumi_->setAxisTitle("(SCAL) inst lumi E30 [Hz cm^{-2}]",1);
+						       lumi_binning_.nbins, lumi_binning_.xmin, lumi_binning_.xmax,
+						       pixelCluster_binning_.xmin,pixelCluster_binning_.xmax);
+    numberOfPixelClustersVsLumi_->setAxisTitle("scal inst lumi E30 [Hz cm^{-2}]",1);
     numberOfPixelClustersVsLumi_->setAxisTitle("number of pixel clusters",2);
 
     histname = "pixelLumiVsLS"; histtitle = "pixel-lumi vs LS";
     pixelLumiVsLS_ = ibooker.bookProfile(histname, histtitle, 
-					 lsPSet.getParameter<int32_t>("nbins"), 0., double(lsPSet.getParameter<int32_t>("nbins")),
-					 pixellumiPSet.getParameter<double>("xmin"), pixellumiPSet.getParameter<double>("xmax"));
+					 ls_binning_.nbins, ls_binning_.xmin, ls_binning_.xmax,
+					 pixellumi_binning_.xmin,pixellumi_binning_.xmax);
     //    pixelLumiVsLS_->getTH1()->SetCanExtend(TH1::kAllAxes);
     pixelLumiVsLS_->setAxisTitle("LS",1);
-    pixelLumiVsLS_->setAxisTitle("(pixel-lumi) inst lumi E30 [Hz cm^{-2}]",2);
+    pixelLumiVsLS_->setAxisTitle("pixel-based inst lumi E30 [Hz cm^{-2}]",2);
     
-    histname = "pixelLumiVsLumi"; histtitle = "pixel-lumi vs lumi";
+    histname = "pixelLumiVsLumi"; histtitle = "pixel-lumi vs scal lumi";
     pixelLumiVsLumi_ = ibooker.bookProfile(histname, histtitle, 
-					   lumiPSet.getParameter<int32_t>("nbins"), lumiPSet.getParameter<double>("xmin"), lumiPSet.getParameter<double>("xmax"),
-					   pixellumiPSet.getParameter<double>("xmin"), pixellumiPSet.getParameter<double>("xmax"));
-    pixelLumiVsLumi_->setAxisTitle("(SCAL) inst lumi E30 [Hz cm^{-2}]",1);
-    pixelLumiVsLumi_->setAxisTitle("(pixel-lumi) inst lumi E30 [Hz cm^{-2}]",2);
+					   lumi_binning_.nbins,lumi_binning_.xmin,lumi_binning_.xmax,
+					   pixellumi_binning_.xmin,lumi_binning_.xmax);
+    pixelLumiVsLumi_->setAxisTitle("scal inst lumi E30 [Hz cm^{-2}]",1);
+    pixelLumiVsLumi_->setAxisTitle("pixel-based inst lumi E30 [Hz cm^{-2}]",2);
   }
 
-  histname = "lumiVsLS"; histtitle = "lumi vs LS";
+  histname = "lumiVsLS"; histtitle = "scal lumi vs LS";
   lumiVsLS_ = ibooker.bookProfile(histname, histtitle, 
-				  lsPSet.getParameter<int32_t>("nbins"), 0., double(lsPSet.getParameter<int32_t>("nbins")),
-				  lumiPSet.getParameter<double>("xmin"), lumiPSet.getParameter<double>("xmax"));
+				  ls_binning_.nbins, ls_binning_.xmin, ls_binning_.xmax,
+				  lumi_binning_.xmin, lumi_binning_.xmax);
   //  lumiVsLS_->getTH1()->SetCanExtend(TH1::kAllAxes);
   lumiVsLS_->setAxisTitle("LS",1);
-  lumiVsLS_->setAxisTitle("(SCAL) inst lumi E30 [Hz cm^{-2}]",2);
+  lumiVsLS_->setAxisTitle("scal inst lumi E30 [Hz cm^{-2}]",2);
 
 }
 
@@ -109,7 +143,7 @@ void LumiMonitor::analyze(edm::Event const& iEvent, edm::EventSetup const& iSetu
 
   float scal_lumi = -1.;
   edm::Handle<LumiScalersCollection> lumiScalers;
-  iEvent.getByToken(lumiscalersToken_, lumiScalers);
+  iEvent.getByToken(lumiScalersToken_, lumiScalers);
   if ( lumiScalers.isValid() && lumiScalers->size() ) {
     LumiScalersCollection::const_iterator scalit = lumiScalers->begin();
     scal_lumi = scalit->instantLumi();

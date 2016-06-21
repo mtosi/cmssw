@@ -25,6 +25,14 @@
 #include "DataFormats/Luminosity/interface/LumiSummary.h"
 
 
+struct MEbinning {
+  int nbins;
+  double xmin;
+  double xmax;
+  //  MEbinning() {};
+  //  explicit MEbinning(int n, double min, double max) { nbins= n; xmin = min; xmax = max;}
+};
+
 //
 // class declaration
 //
@@ -33,7 +41,7 @@ class LumiMonitor : public DQMEDAnalyzer
 {
 public:
   LumiMonitor( const edm::ParameterSet& );
-  ~LumiMonitor();
+  ~LumiMonitor() = default;
   static void fillDescriptions(edm::ConfigurationDescriptions & descriptions);
   static void fillHistoPSetDescription(edm::ParameterSetDescription & pset);
   static void fillHistoLSPSetDescription(edm::ParameterSetDescription & pset);
@@ -45,14 +53,13 @@ protected:
 
 private:
 
-  void bookHistograms();
-
-  edm::ParameterSet conf_;
+  void getHistoPSet  (edm::ParameterSet& pset, MEbinning& mebinning);
+  void getHistoLSPSet(edm::ParameterSet& pset, MEbinning& mebinning);
 
   std::string folderName_;
 
   edm::EDGetTokenT<edmNew::DetSetVector<SiPixelCluster> > pixelClustersToken_;
-  edm::EDGetTokenT<LumiScalersCollection> lumiscalersToken_;
+  edm::EDGetTokenT<LumiScalersCollection> lumiScalersToken_;
   edm::EDGetTokenT<LumiSummary> lumiSummaryToken_;
   
   MonitorElement* numberOfPixelClustersVsLS_;
@@ -68,7 +75,11 @@ private:
 
   float lumi_factor_per_bx_;
 
-  unsigned long long m_cacheID_;
+  MEbinning pixelCluster_binning_;
+  MEbinning lumi_binning_;
+  MEbinning pixellumi_binning_;
+  MEbinning ls_binning_;
+
 };
 
 #endif // LUMIMONITOR_H
