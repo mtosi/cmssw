@@ -85,7 +85,7 @@ def customizeHLTfor2016_Tracking(process):
     ########    ########    ########
     #             iter1            #
     ########    ########    ########
-     process.hltIter1PixelLayerTriplets = cms.EDProducer( "SeedingLayersEDProducer",
+    process.hltIter1PixelLayerTriplets = cms.EDProducer( "SeedingLayersEDProducer",
         layerList = cms.vstring( 
           'BPix1+BPix2+BPix3',
           'BPix1+BPix2+FPix1_pos',
