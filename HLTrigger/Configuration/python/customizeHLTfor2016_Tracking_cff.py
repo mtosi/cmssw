@@ -14,20 +14,23 @@ def customizeHLTfor2016_Tracking(process):
     ########    ########    ########    ########
     #                pixelTracks               #
     ########    ########    ########    ########
-    process.hltPixelLayerTriplets.layerList = cms.vstring(
-      'BPix1+BPix2+BPix3',
-      'BPix1+BPix2+FPix1_pos',
-      'BPix1+BPix2+FPix1_neg',
-      'BPix1+FPix1_pos+FPix2_pos',
-      'BPix1+FPix1_neg+FPix2_neg'
-    )
+    if 'hltPixelLayerTriplets' in process.__dict__:
+        process.hltPixelLayerTriplets.layerList = cms.vstring(
+            'BPix1+BPix2+BPix3',
+            'BPix1+BPix2+FPix1_pos',
+            'BPix1+BPix2+FPix1_neg',
+            'BPix1+FPix1_pos+FPix2_pos',
+            'BPix1+FPix1_neg+FPix2_neg'
+        )
 
-    process.hltPixelTracksTrackingRegions.RegionPSet.nSigmaZ      = cms.double( 0.0 ) ## 4.0 in 2017
-    process.hltPixelTracksTrackingRegions.RegionPSet.ptMin        = cms.double( 0.9 ) ## 0.8 in 2017
-    process.hltPixelTracksTrackingRegions.RegionPSet.originRadius = cms.double( 0.2 ) ## 0.02 in 2017
+    if 'hltPixelTracksTrackingRegions' in process.__dict__:    
+        process.hltPixelTracksTrackingRegions.RegionPSet.nSigmaZ      = cms.double( 0.0 ) ## 4.0 in 2017
+        process.hltPixelTracksTrackingRegions.RegionPSet.ptMin        = cms.double( 0.9 ) ## 0.8 in 2017
+        process.hltPixelTracksTrackingRegions.RegionPSet.originRadius = cms.double( 0.2 ) ## 0.02 in 2017
 
-    process.hltPixelTracksHitDoublets.seedingLayers = "hltPixelLayerTriplets" ## 
-    process.hltPixelTracksHitDoublets.layerPairs = [0] ## [0,1,2] in 2017 ( BUT I'M CONFUSED ! [0] or [0,1] ?!?!? )
+    if 'hltPixelTracksHitDoublets' in process.__dict__:    
+        process.hltPixelTracksHitDoublets.seedingLayers = "hltPixelLayerTriplets" ## 
+        process.hltPixelTracksHitDoublets.layerPairs = [0] ## [0,1,2] in 2017 ( BUT I'M CONFUSED ! [0] or [0,1] ?!?!? )
 
     process.hltPixelTracksHitTriplets = cms.EDProducer( "PixelTripletHLTEDProducer",
         useBending = cms.bool( True ),
@@ -47,38 +50,42 @@ def customizeHLTfor2016_Tracking(process):
         extraHitRZtolerance = cms.double( 0.06 )
     )
 
-    process.hltPixelTracks.SeedingHitSets = "hltPixelTracksHitTriplets"
+    if 'hltPixelTracks' in process.__dict__:
+        process.hltPixelTracks.SeedingHitSets = "hltPixelTracksHitTriplets"
 
     
     ########    ########    ########
     #             iter0            #
     ########    ########    ########
-    process.HLTIter0PSetTrajectoryFilterIT.minimumNumberOfHits = cms.int32( 3 ) ## 4 in 2017
-    process.HLTIter0PSetTrajectoryFilterIT.minHitsMinPt        = cms.int32( 3 ) ## 4 in 2017
-    process.hltIter0PFlowTrackCutClassifier.mva.minLayers    = cms.vint32( 3, 3, 3 ) ## 3, 3, 4 in 2017
-    process.hltIter0PFlowTrackCutClassifier.mva.min3DLayers  = cms.vint32( 0, 0, 0 ) ## 0, 3, 4 in 2017
-    process.hltIter0PFlowTrackCutClassifier.mva.minPixelHits = cms.vint32( 0, 0, 0 ) ## 0, 3, 4 in 2017
+    if 'HLTIter0PSetTrajectoryFilterIT' in process.__dict__:
+        process.HLTIter0PSetTrajectoryFilterIT.minimumNumberOfHits = cms.int32( 3 ) ## 4 in 2017
+        process.HLTIter0PSetTrajectoryFilterIT.minHitsMinPt        = cms.int32( 3 ) ## 4 in 2017
+        process.hltIter0PFlowTrackCutClassifier.mva.minLayers    = cms.vint32( 3, 3, 3 ) ## 3, 3, 4 in 2017
+        process.hltIter0PFlowTrackCutClassifier.mva.min3DLayers  = cms.vint32( 0, 0, 0 ) ## 0, 3, 4 in 2017
+        process.hltIter0PFlowTrackCutClassifier.mva.minPixelHits = cms.vint32( 0, 0, 0 ) ## 0, 3, 4 in 2017
 
     process.HLTIter0PSetTrajectoryBuilderIT = cms.PSet( 
-      propagatorAlong = cms.string( "PropagatorWithMaterialParabolicMf" ),
-      trajectoryFilter = cms.PSet(  refToPSet_ = cms.string( "HLTIter0PSetTrajectoryFilterIT" ) ),
-      maxCand = cms.int32( 2 ),
-      ComponentType = cms.string( "CkfTrajectoryBuilder" ),
-      propagatorOpposite = cms.string( "PropagatorWithMaterialParabolicMfOpposite" ),
-      estimator = cms.string( "hltESPChi2ChargeMeasurementEstimator9" ),
-      TTRHBuilder = cms.string( "hltESPTTRHBWithTrackAngle" ),
-      updator = cms.string( "hltESPKFUpdator" ),
-      alwaysUseInvalidHits = cms.bool( False ),
-      intermediateCleaning = cms.bool( True ),
-      lostHitPenalty = cms.double( 30.0 )
+         propagatorAlong = cms.string( "PropagatorWithMaterialParabolicMf" ),
+         trajectoryFilter = cms.PSet(  refToPSet_ = cms.string( "HLTIter0PSetTrajectoryFilterIT" ) ),
+         maxCand = cms.int32( 2 ),
+         ComponentType = cms.string( "CkfTrajectoryBuilder" ),
+         propagatorOpposite = cms.string( "PropagatorWithMaterialParabolicMfOpposite" ),
+         estimator = cms.string( "hltESPChi2ChargeMeasurementEstimator9" ),
+         TTRHBuilder = cms.string( "hltESPTTRHBWithTrackAngle" ),
+         updator = cms.string( "hltESPKFUpdator" ),
+         alwaysUseInvalidHits = cms.bool( False ),
+         intermediateCleaning = cms.bool( True ),
+         lostHitPenalty = cms.double( 30.0 )
     )
-    process.hltIter0PFlowCkfTrackCandidates.TrajectoryBuilderPSet = cms.PSet(refToPSet_ = cms.string('HLTIter0PSetTrajectoryBuilderIT'))
+
+    if 'hltIter0PFlowCkfTrackCandidates' in process.__dict__:
+        process.hltIter0PFlowCkfTrackCandidates.TrajectoryBuilderPSet = cms.PSet(refToPSet_ = cms.string('HLTIter0PSetTrajectoryBuilderIT'))
 
 
     ########    ########    ########
     #             iter1            #
     ########    ########    ########
-    process.hltIter1PixelLayerTriplets = cms.EDProducer( "SeedingLayersEDProducer",
+     process.hltIter1PixelLayerTriplets = cms.EDProducer( "SeedingLayersEDProducer",
         layerList = cms.vstring( 
           'BPix1+BPix2+BPix3',
           'BPix1+BPix2+FPix1_pos',
@@ -110,11 +117,13 @@ def customizeHLTfor2016_Tracking(process):
         ),
         TIB = cms.PSet(  )
     )
+    
+    if 'hltIter1PFlowPixelHitDoublets' in process.__dict__:
+        process.hltIter1PFlowPixelHitDoublets.layerPairs = [0] ## [0,1,2] in 2017 ( BUT I'M CONFUSED ! [0] or [0,1] ?!?!? )
+        process.hltIter1PFlowPixelHitDoublets.seedingLayers = "hltIter1PixelLayerTriplets"
 
-    process.hltIter1PFlowPixelHitDoublets.layerPairs = [0] ## [0,1,2] in 2017 ( BUT I'M CONFUSED ! [0] or [0,1] ?!?!? )
-    process.hltIter1PFlowPixelHitDoublets.seedingLayers = "hltIter1PixelLayerTriplets"
-
-    process.hltIter1PFlowPixelHitTriplets = cms.EDProducer( "PixelTripletHLTEDProducer",
+    if 'hltIter1PFlowPixelHitTriplets' in process.__dict__:
+        process.hltIter1PFlowPixelHitTriplets = cms.EDProducer( "PixelTripletHLTEDProducer",
         useBending = cms.bool( True ),
         useFixedPreFiltering = cms.bool( False ),
         produceIntermediateHitTriplets = cms.bool( False ),
@@ -128,15 +137,17 @@ def customizeHLTfor2016_Tracking(process):
         extraHitRZtolerance = cms.double( 0.037 )
     )
 
-    process.hltIter1PFlowPixelTrackingRegions.RegionPSet.nSigmaZVertex   = cms.double( 3.0 ) ## 4 in 2017
-    process.hltIter1PFlowPixelTrackingRegions.RegionPSet.nSigmaZBeamSpot = cms.double( 3.0 ) ## 4 in 2017      
-    process.hltIter1PFlowPixelTrackingRegions.RegionPSet.ptMin           = cms.double( 0.5 ) ## 0.3 in 2017
+    if 'hltIter1PFlowPixelTrackingRegions' in process.__dict__:
+        process.hltIter1PFlowPixelTrackingRegions.RegionPSet.nSigmaZVertex   = cms.double( 3.0 ) ## 4 in 2017
+        process.hltIter1PFlowPixelTrackingRegions.RegionPSet.nSigmaZBeamSpot = cms.double( 3.0 ) ## 4 in 2017      
+        process.hltIter1PFlowPixelTrackingRegions.RegionPSet.ptMin           = cms.double( 0.5 ) ## 0.3 in 2017
 
     from RecoTracker.TkSeedGenerator.seedCreatorFromRegionConsecutiveHitsEDProducer_cff import seedCreatorFromRegionConsecutiveHitsEDProducer as _seedCreatorFromRegionConsecutiveHitsEDProducer
-    replace_with(process.hltIter1PFlowPixelSeeds,_seedCreatorFromRegionConsecutiveHitsEDProducer.clone(
-	 seedingHitSets = "hltIter1PFlowPixelHitTriplets",
-	 TTRHBuilder = cms.string('hltESPTTRHBWithTrackAngle'),
-    ))
+    if 'hltIter1PFlowPixelSeeds' in process.__dict__:
+        replace_with(process.hltIter1PFlowPixelSeeds,_seedCreatorFromRegionConsecutiveHitsEDProducer.clone(
+                seedingHitSets = "hltIter1PFlowPixelHitTriplets",
+                TTRHBuilder = cms.string('hltESPTTRHBWithTrackAngle'),
+        ))
 
     process.HLTIter1PSetTrajectoryBuilderIT = cms.PSet( 
 	propagatorAlong = cms.string( "PropagatorWithMaterialParabolicMf" ),
@@ -154,10 +165,11 @@ def customizeHLTfor2016_Tracking(process):
 	useSameTrajFilter = cms.bool(True) 
     )
 
-    process.hltIter1PFlowCkfTrackCandidates.TrajectoryBuilderPSet = cms.PSet(refToPSet_ = cms.string('HLTIter1PSetTrajectoryBuilderIT'))
+    if 'hltIter1PFlowCkfTrackCandidates' in process.__dict__:
+        process.hltIter1PFlowCkfTrackCandidates.TrajectoryBuilderPSet = cms.PSet(refToPSet_ = cms.string('HLTIter1PSetTrajectoryBuilderIT'))
 
-
-    replace_with(process.HLTIterativeTrackingIteration1 , cms.Sequence( process.hltIter1ClustersRefRemoval + process.hltIter1MaskedMeasurementTrackerEvent + process.hltIter1PixelLayerTriplets + process.hltIter1PFlowPixelTrackingRegions + process.hltIter1PFlowPixelClusterCheck + process.hltIter1PFlowPixelHitDoublets + process.hltIter1PFlowPixelHitTriplets + process.hltIter1PFlowPixelSeeds + process.hltIter1PFlowCkfTrackCandidates + process.hltIter1PFlowCtfWithMaterialTracks + process.hltIter1PFlowTrackCutClassifierPrompt + process.hltIter1PFlowTrackCutClassifierDetached + process.hltIter1PFlowTrackCutClassifierMerged + process.hltIter1PFlowTrackSelectionHighPurity ) )
+    if 'HLTIterativeTrackingIteration1' in process.__dict__:
+        replace_with(process.HLTIterativeTrackingIteration1 , cms.Sequence( process.hltIter1ClustersRefRemoval + process.hltIter1MaskedMeasurementTrackerEvent + process.hltIter1PixelLayerTriplets + process.hltIter1PFlowPixelTrackingRegions + process.hltIter1PFlowPixelClusterCheck + process.hltIter1PFlowPixelHitDoublets + process.hltIter1PFlowPixelHitTriplets + process.hltIter1PFlowPixelSeeds + process.hltIter1PFlowCkfTrackCandidates + process.hltIter1PFlowCtfWithMaterialTracks + process.hltIter1PFlowTrackCutClassifierPrompt + process.hltIter1PFlowTrackCutClassifierDetached + process.hltIter1PFlowTrackCutClassifierMerged + process.hltIter1PFlowTrackSelectionHighPurity ) )
 
     ########    ########    ########
     #             iter2            #
@@ -203,13 +215,15 @@ def customizeHLTfor2016_Tracking(process):
         TIB = cms.PSet(  )
     )
  
-    process.hltIter2PFlowPixelTrackingRegions.RegionPSet.ptMin         = cms.double(1.2) ## 0.8 in 2017
-    process.hltIter2PFlowPixelTrackingRegions.RegionPSet.nSigmaZVertex = cms.double(3.0) ## 4.0 in 2017
+    if 'hltIter2PFlowPixelTrackingRegions' in process.__dict__:
+        process.hltIter2PFlowPixelTrackingRegions.RegionPSet.ptMin         = cms.double(1.2) ## 0.8 in 2017
+        process.hltIter2PFlowPixelTrackingRegions.RegionPSet.nSigmaZVertex = cms.double(3.0) ## 4.0 in 2017
 
-    process.hltIter2PFlowPixelHitDoublets.seedingLayers                  = "hltIter2PixelLayerPairs"
-    process.hltIter2PFlowPixelHitDoublets.produceIntermediateHitDoublets = False ## True in 2017
-    process.hltIter2PFlowPixelHitDoublets.produceSeedingHitSets          = True ## False in 2017
-    process.hltIter2PFlowPixelHitDoublets.layerPairs                     = [0] ## [0,1] in 2017 ( BUT I'M CONFUSED ! [0] or [0,1] ?!?!? )
+    if 'hltIter2PFlowPixelHitDoublets' in process.__dict__:
+        process.hltIter2PFlowPixelHitDoublets.seedingLayers                  = "hltIter2PixelLayerPairs"
+        process.hltIter2PFlowPixelHitDoublets.produceIntermediateHitDoublets = False ## True in 2017
+        process.hltIter2PFlowPixelHitDoublets.produceSeedingHitSets          = True ## False in 2017
+        process.hltIter2PFlowPixelHitDoublets.layerPairs                     = [0] ## [0,1] in 2017 ( BUT I'M CONFUSED ! [0] or [0,1] ?!?!? )
 
     def _copy(old, new, skip=[]):
         skipSet = set(skip)
@@ -217,8 +231,10 @@ def customizeHLTfor2016_Tracking(process):
             if key not in skipSet:
                 setattr(new, key, getattr(old, key))
     from RecoTracker.TkSeedGenerator.seedCreatorFromRegionConsecutiveHitsEDProducer_cfi import seedCreatorFromRegionConsecutiveHitsEDProducer as _seedCreatorFromRegionConsecutiveHitsEDProducer
-    replace_with(process.hltIter2PFlowPixelSeeds, _seedCreatorFromRegionConsecutiveHitsEDProducer.clone(seedingHitSets="hltIter2PFlowPixelHitDoublets"))
-    _copy(process.HLTSeedFromConsecutiveHitsCreatorIT, process.hltIter2PFlowPixelSeeds, skip=["ComponentName"])
+    if 'hltIter2PFlowPixelSeeds' in process.__dict__:
+        replace_with(process.hltIter2PFlowPixelSeeds, _seedCreatorFromRegionConsecutiveHitsEDProducer.clone(seedingHitSets="hltIter2PFlowPixelHitDoublets"))
+    if 'HLTSeedFromConsecutiveHitsCreatorIT' in process.__dict__:
+        _copy(process.HLTSeedFromConsecutiveHitsCreatorIT, process.hltIter2PFlowPixelSeeds, skip=["ComponentName"])
 
     process.HLTIter2PSetTrajectoryBuilderIT = cms.PSet( 
       propagatorAlong = cms.string( "PropagatorWithMaterialParabolicMf" ),
@@ -235,10 +251,11 @@ def customizeHLTfor2016_Tracking(process):
       lostHitPenalty = cms.double( 30.0 )
     )
 
-    process.hltIter2PFlowCkfTrackCandidates.TrajectoryBuilderPSet = cms.PSet(refToPSet_ = cms.string('HLTIter2PSetTrajectoryBuilderIT'))
+    if 'hltIter2PFlowCkfTrackCandidates' in process.__dict__:
+        process.hltIter2PFlowCkfTrackCandidates.TrajectoryBuilderPSet = cms.PSet(refToPSet_ = cms.string('HLTIter2PSetTrajectoryBuilderIT'))
 
-
-    replace_with(process.HLTIterativeTrackingIteration2 , cms.Sequence( process.hltIter2ClustersRefRemoval + process.hltIter2MaskedMeasurementTrackerEvent + process.hltIter2PixelLayerPairs + process.hltIter2PFlowPixelTrackingRegions + process.hltIter2PFlowPixelClusterCheck + process.hltIter2PFlowPixelHitDoublets + process.hltIter2PFlowPixelSeeds + process.hltIter2PFlowCkfTrackCandidates + process.hltIter2PFlowCtfWithMaterialTracks + process.hltIter2PFlowTrackCutClassifier + process.hltIter2PFlowTrackSelectionHighPurity ))
+    if 'HLTIterativeTrackingIteration2' in process.__dict__:
+        replace_with(process.HLTIterativeTrackingIteration2 , cms.Sequence( process.hltIter2ClustersRefRemoval + process.hltIter2MaskedMeasurementTrackerEvent + process.hltIter2PixelLayerPairs + process.hltIter2PFlowPixelTrackingRegions + process.hltIter2PFlowPixelClusterCheck + process.hltIter2PFlowPixelHitDoublets + process.hltIter2PFlowPixelSeeds + process.hltIter2PFlowCkfTrackCandidates + process.hltIter2PFlowCtfWithMaterialTracks + process.hltIter2PFlowTrackCutClassifier + process.hltIter2PFlowTrackSelectionHighPurity ))
 
 
 
@@ -272,16 +289,25 @@ def customizeHLTfor2016_Tracking(process):
 
 
     # Remove entirely to avoid warning from the early deleter
-    del process.hltPixelLayerQuadruplets
-    del process.hltPixelTracksHitQuadruplets
-    del process.hltIter1PixelLayerQuadruplets
-    del process.hltIter1PFlowPixelHitQuadruplets
-    del process.hltIter2PixelLayerTriplets
-    del process.hltIter2PFlowPixelHitTriplets
+    if 'hltPixelLayerQuadruplets' in process.__dict__:
+        del process.hltPixelLayerQuadruplets
+    if 'hltPixelTracksHitQuadruplets' in process.__dict__:
+        del process.hltPixelTracksHitQuadruplets
+    if 'hltIter1PixelLayerQuadruplets' in process.__dict__:
+        del process.hltIter1PixelLayerQuadruplets
+    if 'hltIter1PFlowPixelHitQuadruplets' in process.__dict__:
+        del process.hltIter1PFlowPixelHitQuadruplets
+    if 'hltIter2PixelLayerTriplets' in process.__dict__:
+        del process.hltIter2PixelLayerTriplets
+    if 'hltIter2PFlowPixelHitTriplets' in process.__dict__:
+        del process.hltIter2PFlowPixelHitTriplets
 
-    del process.HLTIter0GroupedCkfTrajectoryBuilderIT
-    del process.HLTIter1GroupedCkfTrajectoryBuilderIT
-    del process.HLTIter2GroupedCkfTrajectoryBuilderIT
+    if 'HLTIter0GroupedCkfTrajectoryBuilderIT' in process.__dict__:
+        del process.HLTIter0GroupedCkfTrajectoryBuilderIT
+    if 'HLTIter1GroupedCkfTrajectoryBuilderIT' in process.__dict__:
+        del process.HLTIter1GroupedCkfTrajectoryBuilderIT
+    if 'HLTIter2GroupedCkfTrajectoryBuilderIT' in process.__dict__:
+        del process.HLTIter2GroupedCkfTrajectoryBuilderIT
 
     return process
 
