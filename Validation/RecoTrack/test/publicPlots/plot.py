@@ -1684,7 +1684,7 @@ def drawPlot(name, plot, xmin=None, ymin=0, xmax=None, ymax=None, xlog=False, yl
              rebin=None,
              ratio=False, ratioYmin=0.5, ratioYmax=1,
              customiseBeforeLegend=None, customise=None,
-             period=4,
+             period=14,
              #pos=11):
              pos=0,
              xbinlabels=None, xbinlabelsize=None, xbinlabeloption=None):
