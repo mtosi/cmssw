@@ -212,7 +212,7 @@ class PlotStack:
         self._stack.Draw("same"+opt)
 
     def addToLegend(self, legend, legendColumns):
-        st = "f"
+        st = "pe" if ("pe" in self._stack.GetDrawOption()) else "f"
         for h, label in zip(self._histos, self._legends):
             legend.AddEntry(h, label, st)
 
