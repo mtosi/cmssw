@@ -85,6 +85,27 @@ class Files:
     def getStyles(self):
         return self._styles
 
+class Directories:
+    def __init__(self, directoriesLegends):
+        self._directories = []
+        self._legends = []
+        self._styles = []
+        for dl in directoriesLegends:
+            self._directories.append(dl[0])
+            self._legends.append(dl[1])
+            self._styles.append(dl[2])
+
+    def getDirectories(self):
+        return self._directories
+
+    def getLegends(self):
+        return self._legends
+
+    def getStyles(self):
+        return self._styles
+
+        
+
 def applyStyle(h, color, markerStyle):
     h.SetMarkerStyle(markerStyle)
     h.SetMarkerColor(color)
@@ -180,6 +201,7 @@ class PlotStack:
         self._legends = []
 
     def add(self, histo, legend):
+        histo.ResetBit(ROOT.TH1.kIsAverage)
         self._histos.append(histo)
         self._legends.append(legend)
 
@@ -393,148 +415,170 @@ def main():
     )
 
 
-    files1 = Files([phase0, phase1])
-    files1ca = Files([phase0, phase1ca])
-    files2 = Files([phase1, phase1ca])
-    files2_pu50 = Files([("DQM_Phase1_pu50_v7.root", "2017", stylePhase1), ("DQM_Phase1CA_pu50_v4.root", "2017 (CA)", stylePhase1CA)])
-    files2_pu70 = Files([("DQM_Phase1_pu70_v7.root", "2017", stylePhase1), ("DQM_Phase1CA_pu70_v4.root", "2017 (CA)", stylePhase1CA)])
+#    files1 = Files([phase0, phase1])
+#    files1ca = Files([phase0, phase1ca])
+#    files2 = Files([phase1, phase1ca])
+#    files2_pu50 = Files([("DQM_Phase1_pu50_v7.root", "2017", stylePhase1), ("DQM_Phase1CA_pu50_v4.root", "2017 (CA)", stylePhase1CA)])
+#    files2_pu70 = Files([("DQM_Phase1_pu70_v7.root", "2017", stylePhase1), ("DQM_Phase1CA_pu70_v4.root", "2017 (CA)", stylePhase1CA)])
 
-    filespu = Files([
-        #("../DQM_Phase1_ttbar_pu0_v5.root", "2017 no PU", stylePU0),
-        #("DQM_Phase1_pu0_v1.root", "2017 no PU", stylePU0),
-        #("DQM_Phase1_pu0_v4.root", "2017 no PU", stylePU0),
-        ("DQM_Phase1_pu0_v7.root", "2017 no PU", stylePU0),
-        ("DQM_Phase1_pu35_v7.root", "2017 #LTPU#GT=35", stylePU35),
-        ("DQM_Phase1_pu50_v7.root", "2017 #LTPU#GT=50", stylePU50),
-        ("DQM_Phase1_pu70_v7.root", "2017 #LTPU#GT=70", stylePU70),
+#    filespu = Files([
+#        #("../DQM_Phase1_ttbar_pu0_v5.root", "2017 no PU", stylePU0),
+#        #("DQM_Phase1_pu0_v1.root", "2017 no PU", stylePU0),
+#        #("DQM_Phase1_pu0_v4.root", "2017 no PU", stylePU0),
+#        ("DQM_Phase1_pu0_v7.root", "2017 no PU", stylePU0),
+#        ("DQM_Phase1_pu35_v7.root", "2017 #LTPU#GT=35", stylePU35),
+#        ("DQM_Phase1_pu50_v7.root", "2017 #LTPU#GT=50", stylePU50),
+#        ("DQM_Phase1_pu70_v7.root", "2017 #LTPU#GT=70", stylePU70),
+#    ])
+#    filescapu = Files([
+#        ("DQM_Phase1CA_pu0_v5.root", "2017 (CA) no PU", stylePU0),
+#        ("DQM_Phase1CA_pu35_v4.root", "2017 (CA) #LTPU#GT=35", stylePU35),
+#        ("DQM_Phase1CA_pu50_v4.root", "2017 (CA) #LTPU#GT=50", stylePU50),
+#        ("DQM_Phase1CA_pu70_v4.root", "2017 (CA) #LTPU#GT=70", stylePU70),
+#    ])
+#
+#    files0pu_time = Files([
+#        ("../DQM_Phase0_ttbar_pu0_v1.root", "2016 no PU", stylePU0),
+#        ("../DQM_Phase0_ttbar_pu35_v1.root", "2016 #LTPU#GT=35", stylePU35),
+#        ("../DQM_Phase0_ttbar_pu50_v1.root", "2016 #LTPU#GT=50", stylePU50),
+#        ("../DQM_Phase0_ttbar_pu70_v1.root", "2016 #LTPU#GT=70", stylePU70),
+#    ])
+#    filespu_time = Files([
+#        ("../DQM_Phase1_ttbar_pu0_v5.root", "2017 no PU", stylePU0),
+#        ("../DQM_Phase1_ttbar_pu35_v5.root", "2017 #LTPU#GT=35", stylePU35),
+#        ("../DQM_Phase1_ttbar_pu50_v5.root", "2017 #LTPU#GT=50", stylePU50),
+#        ("../DQM_Phase1_ttbar_pu70_v5.root", "2017 #LTPU#GT=70", stylePU70),
+#    ])
+#    filescapu_time = Files([
+#        ("../DQM_Phase1CA_ttbar_pu0_v5.root", "2017 (CA) no PU", stylePU0),
+#        ("../DQM_Phase1CA_ttbar_pu35_v5.root", "2017 (CA) #LTPU#GT=35", stylePU35),
+#        ("../DQM_Phase1CA_ttbar_pu50_v5.root", "2017 (CA) #LTPU#GT=50", stylePU50),
+#        ("../DQM_Phase1CA_ttbar_pu70_v5.root", "2017 (CA) #LTPU#GT=70", stylePU70),
+#    ])
+#
+
+    styleReg     = (ROOT.kBlue+7,   21)
+    styleRegViaR = (ROOT.kGreen+7,  20)
+    styleRegViaG = (ROOT.kOrange+7, 22)
+
+    pixelTracksFile = Files([
+        ("/tmp/tosi/DQM_V0001_R000000001__Global__CMSSW_X_Y_Z__RECO.root","Phase1",stylePhase1)
     ])
-    filescapu = Files([
-        ("DQM_Phase1CA_pu0_v5.root", "2017 (CA) no PU", stylePU0),
-        ("DQM_Phase1CA_pu35_v4.root", "2017 (CA) #LTPU#GT=35", stylePU35),
-        ("DQM_Phase1CA_pu50_v4.root", "2017 (CA) #LTPU#GT=50", stylePU50),
-        ("DQM_Phase1CA_pu70_v4.root", "2017 (CA) #LTPU#GT=70", stylePU70),
+
+#    pileup = "#LTPU#GT=35"
+    pileup = "noPU"
+    mainDirectory = "DQMData/Run 1/HLT/Run summary/Tracking/ValidationWRTtp/"
+    subDirectories = Directories([
+        ("hltIterL3MuonPixel", "regional", styleReg), # original regional pixel tracks collection
+        ("hltIterL3MuonPixelFromRegionalViaRegion","regional via regional", styleRegViaR), # closure test (original regional pixel tracks filtered by ROI)
+        ("hltIterL3MuonPixelFromGlobalViaRegion", "regional via global", styleRegViaG), # target regional pixel tracks collection built by filtering in the ROIs the global pixel tracks
     ])
+    legendLabels = [
+        "regional",
+        "regional via regional",
+        "regional via global",
+    ]
 
-    files0pu_time = Files([
-        ("../DQM_Phase0_ttbar_pu0_v1.root", "2016 no PU", stylePU0),
-        ("../DQM_Phase0_ttbar_pu35_v1.root", "2016 #LTPU#GT=35", stylePU35),
-        ("../DQM_Phase0_ttbar_pu50_v1.root", "2016 #LTPU#GT=50", stylePU50),
-        ("../DQM_Phase0_ttbar_pu70_v1.root", "2016 #LTPU#GT=70", stylePU70),
-    ])
-    filespu_time = Files([
-        ("../DQM_Phase1_ttbar_pu0_v5.root", "2017 no PU", stylePU0),
-        ("../DQM_Phase1_ttbar_pu35_v5.root", "2017 #LTPU#GT=35", stylePU35),
-        ("../DQM_Phase1_ttbar_pu50_v5.root", "2017 #LTPU#GT=50", stylePU50),
-        ("../DQM_Phase1_ttbar_pu70_v5.root", "2017 #LTPU#GT=70", stylePU70),
-    ])
-    filescapu_time = Files([
-        ("../DQM_Phase1CA_ttbar_pu0_v5.root", "2017 (CA) no PU", stylePU0),
-        ("../DQM_Phase1CA_ttbar_pu35_v5.root", "2017 (CA) #LTPU#GT=35", stylePU35),
-        ("../DQM_Phase1CA_ttbar_pu50_v5.root", "2017 (CA) #LTPU#GT=50", stylePU50),
-        ("../DQM_Phase1CA_ttbar_pu70_v5.root", "2017 (CA) #LTPU#GT=70", stylePU70),
-    ])
+    plotEffAndFake(pixelTracksFile.getFiles()[0], mainDirectory, subDirectories.getDirectories(), subDirectories.getLegends(), subDirectories.getStyles(), "ZMM_noPU_run3", pileup, "Phase1")
 
-
-    pileup = "#LTPU#GT=35"
-
-    plotEffAndFake(files1, "ttbar_pu35_phase0_phase1", pileup)
-    plotEffAndFake(files1ca, "ttbar_pu35_phase0_phase1ca", pileup, hasCA=True)
-    plotEffAndFake(files2, "ttbar_pu35_phase1_ca", pileup, hasCA=True)
-    plotEffAndFake(files2_pu50, "ttbar_pu50_phase1_ca", pileup.replace("35", "50"), hasCA=True)
-    plotEffAndFake(files2_pu70, "ttbar_pu70_phase1_ca", pileup.replace("35", "70"), hasPU70=True, hasCA=True)
-
-    plotResol(files1, "ttbar_pu35_phase0_phase1", pileup)
-    #plotResol(files1ca, "ttbar_pu35_phase0_phase1ca", pileup)
-    plotResol(files2, "ttbar_pu35_phase1_ca", pileup)
-
-    plotVertex(files1, "ttbar_pu35_phase0_phase1", pileup)
-    #plotVertex(files1ca, "ttbar_pu35_phase0_phase1ca", pileup)
-    plotVertex(files2, "ttbar_pu35_phase1_ca", pileup)
-
-    #plotFake(files2, "ttbar_pu35_phase1_tdr", pileup)
-    plotColoredEff(files1.getFiles()[1], "ttbar_pu35_phase1", pileup)
-    plotColoredEff(files1ca.getFiles()[1], "ttbar_pu35_phase1ca", pileup)
-
-#    plotDebug(files1_3, "ttbar_pu35_run2debug")
-
-    plotEffAndFake(filespu, "ttbar_phase1_vs_pu", None, hasPU70=True)
-    plotResol(filespu, "ttbar_phase1_vs_pu", None, hasPU70=True)
-    plotVertex(filespu, "ttbar_phase1_vs_pu", None, hasPU70=True)
-
-    plotEffAndFake(filescapu, "ttbar_phase1_ca_vs_pu", None, hasPU70=True, hasCA=True)
-    plotResol(filescapu, "ttbar_phase1_ca_vs_pu", None, hasPU70=True)
-    plotVertex(filescapu, "ttbar_phase1_ca_vs_pu", None, hasPU70=True)
-
-    plotTime([files0pu_time, filespu_time], "ttbar_phase0_phase1_vs_pu", [0, 35, 50, 70], ["2016", "2017"], [styleRun2, stylePhase1])
-    plotTime([files0pu_time, filespu_time, filescapu_time], "ttbar_phase0_phase1ca_vs_pu", [0, 35, 50, 70], ["2016", "2017", "2017 (CA)"], [styleRun2, stylePhase1, stylePhase1CA])
-
-    # trackingOnly with DQM+validation enabled, 1 thread
-    if False:
-        peakrss = {
-            "2016": {0: 1515.45,
-                     35: 1820.23,
-                     50: 2021.14,
-                     70: 2375.56},
-            "2017": {0: 1696.24,
-                     35: 2110.91,
-                     50: 2190.12,
-                     70: 2674.59},
-            "2017 (CA)": {0: 1697.5,
-                          35: 2213.77,
-                          50: 2413.3,
-                          70: 2795.5},
-        }
-        
-        # trackingOnly without DQM+validation, no output modules, 4 threads
-        peakrss = {
-            "2016": {0: 1278.68,
-                     35: 1664.89,
-                     50: 1888.64,
-                     70: 2314.17},
-            "2017": {0: 1435.69,
-                     35: 2143.47,
-                     50: 2525.84,
-                     70: 2915.48},
-            "2017 (CA)": {0: 1452.07,
-                          35: 2266.03,
-                          50: 2502.52,
-                          70: 3051.34},
-        }
-        
-        peakrss_v2 = {
-            "2016": {0: 1267.67,
-                     35: 1674.13,
-                     50: 1853.39,
-                     70: 2192.17},
-            "2017": {0: 1434.75,
-                     35: 2123.64,
-                     50: 2335.03,
-                     70: 2667.48},
-            "2017 (CA)": {0: 1441.02,
-                          35: 2191.23,
-                          50: 2445.68,
-                          70: 2729.58},
-        }
-        
-        peakrss_trajectory = {
-            "2017 90X IB": {0: 1445.08,
-                         35: 2112.86,
-                         50: 2320.14,
-                         60: 2578.23},
-            "2017 90X IB+#17098": {0: 1422.88,
-                                   35: 1974.98,
-                                   50: 2128.61,
-                                   60: 2300.59},
-        }
-        
-        plotMemory("ttbar_phase0_phase1_vs_pu", peakrss, ["2016", "2017"], [styleRun2, stylePhase1])
-        plotMemory("ttbar_phase0_phase1ca_vs_pu", peakrss, ["2016", "2017", "2017 (CA)"], [styleRun2, stylePhase1, stylePhase1CA])
-        
-        plotMemory("90x_ttbar_phase1_vs_pu", peakrss_trajectory, ["2017 90X IB", "2017 90X IB+#17098"], [stylePhase1, stylePhase1CA])
-
-    printEffFake(files1, pileup)
-    print("With CA")
-    printEffFake(files1ca, pileup)
+#    plotEffAndFake(files1, "ttbar_pu35_phase0_phase1", pileup)
+#    plotEffAndFake(files1ca, "ttbar_pu35_phase0_phase1ca", pileup, hasCA=True)
+#    plotEffAndFake(files2, "ttbar_pu35_phase1_ca", pileup, hasCA=True)
+#    plotEffAndFake(files2_pu50, "ttbar_pu50_phase1_ca", pileup.replace("35", "50"), hasCA=True)
+#    plotEffAndFake(files2_pu70, "ttbar_pu70_phase1_ca", pileup.replace("35", "70"), hasPU70=True, hasCA=True)
+#
+#    plotResol(files1, "ttbar_pu35_phase0_phase1", pileup)
+#    #plotResol(files1ca, "ttbar_pu35_phase0_phase1ca", pileup)
+#    plotResol(files2, "ttbar_pu35_phase1_ca", pileup)
+#
+#    plotVertex(files1, "ttbar_pu35_phase0_phase1", pileup)
+#    #plotVertex(files1ca, "ttbar_pu35_phase0_phase1ca", pileup)
+#    plotVertex(files2, "ttbar_pu35_phase1_ca", pileup)
+#
+#    #plotFake(files2, "ttbar_pu35_phase1_tdr", pileup)
+#    plotColoredEff(files1.getFiles()[1], "ttbar_pu35_phase1", pileup)
+#    plotColoredEff(files1ca.getFiles()[1], "ttbar_pu35_phase1ca", pileup)
+#
+##    plotDebug(files1_3, "ttbar_pu35_run2debug")
+#
+#    plotEffAndFake(filespu, "ttbar_phase1_vs_pu", None, hasPU70=True)
+#    plotResol(filespu, "ttbar_phase1_vs_pu", None, hasPU70=True)
+#    plotVertex(filespu, "ttbar_phase1_vs_pu", None, hasPU70=True)
+#
+#    plotEffAndFake(filescapu, "ttbar_phase1_ca_vs_pu", None, hasPU70=True, hasCA=True)
+#    plotResol(filescapu, "ttbar_phase1_ca_vs_pu", None, hasPU70=True)
+#    plotVertex(filescapu, "ttbar_phase1_ca_vs_pu", None, hasPU70=True)
+#
+#    plotTime([files0pu_time, filespu_time], "ttbar_phase0_phase1_vs_pu", [0, 35, 50, 70], ["2016", "2017"], [styleRun2, stylePhase1])
+#    plotTime([files0pu_time, filespu_time, filescapu_time], "ttbar_phase0_phase1ca_vs_pu", [0, 35, 50, 70], ["2016", "2017", "2017 (CA)"], [styleRun2, stylePhase1, stylePhase1CA])
+#
+#    # trackingOnly with DQM+validation enabled, 1 thread
+#    if False:
+#        peakrss = {
+#            "2016": {0: 1515.45,
+#                     35: 1820.23,
+#                     50: 2021.14,
+#                     70: 2375.56},
+#            "2017": {0: 1696.24,
+#                     35: 2110.91,
+#                     50: 2190.12,
+#                     70: 2674.59},
+#            "2017 (CA)": {0: 1697.5,
+#                          35: 2213.77,
+#                          50: 2413.3,
+#                          70: 2795.5},
+#        }
+#        
+#        # trackingOnly without DQM+validation, no output modules, 4 threads
+#        peakrss = {
+#            "2016": {0: 1278.68,
+#                     35: 1664.89,
+#                     50: 1888.64,
+#                     70: 2314.17},
+#            "2017": {0: 1435.69,
+#                     35: 2143.47,
+#                     50: 2525.84,
+#                     70: 2915.48},
+#            "2017 (CA)": {0: 1452.07,
+#                          35: 2266.03,
+#                          50: 2502.52,
+#                          70: 3051.34},
+#        }
+#        
+#        peakrss_v2 = {
+#            "2016": {0: 1267.67,
+#                     35: 1674.13,
+#                     50: 1853.39,
+#                     70: 2192.17},
+#            "2017": {0: 1434.75,
+#                     35: 2123.64,
+#                     50: 2335.03,
+#                     70: 2667.48},
+#            "2017 (CA)": {0: 1441.02,
+#                          35: 2191.23,
+#                          50: 2445.68,
+#                          70: 2729.58},
+#        }
+#        
+#        peakrss_trajectory = {
+#            "2017 90X IB": {0: 1445.08,
+#                         35: 2112.86,
+#                         50: 2320.14,
+#                         60: 2578.23},
+#            "2017 90X IB+#17098": {0: 1422.88,
+#                                   35: 1974.98,
+#                                   50: 2128.61,
+#                                   60: 2300.59},
+#        }
+#        
+#        plotMemory("ttbar_phase0_phase1_vs_pu", peakrss, ["2016", "2017"], [styleRun2, stylePhase1])
+#        plotMemory("ttbar_phase0_phase1ca_vs_pu", peakrss, ["2016", "2017", "2017 (CA)"], [styleRun2, stylePhase1, stylePhase1CA])
+#        
+#        plotMemory("90x_ttbar_phase1_vs_pu", peakrss_trajectory, ["2017 90X IB", "2017 90X IB+#17098"], [stylePhase1, stylePhase1CA])
+#
+#    printEffFake(files1, pileup)
+#    print("With CA")
+#    printEffFake(files1ca, pileup)
 
    
 
@@ -569,7 +613,7 @@ def plotDebug(files, prefix):
 ################################################################################
 ################################################################################
 ################################################################################
-def plotEffAndFake(files, prefix, pileup, hasPU70=False, hasCA=False):
+def plotEffAndFake(files, prefix, pileup, hasPU70=False, hasCA=False, phase="Phase1"):
     folder_eff = "Tracking/Run summary/Track/cutsRecoHp_trackingParticleRecoAsssociation/"
     folder_fake = "Tracking/Run summary/Track/cutsRecoPt09Hp_trackingParticleRecoAsssociation/"
 
@@ -589,9 +633,17 @@ def plotEffAndFake(files, prefix, pileup, hasPU70=False, hasCA=False):
     if pileup is not None:
         putext = " (%s)" % pileup
 
+    tptext = ""
+    if phase == "Phase1" :
+        tptext = "p_{T} > 0.9 GeV, |#eta| < 3.0, ^{}d_{0} < 2.5 cm" # Phase1
+    elif phase == "Phase0" :
+        tptext = "p_{T} > 0.9 GeV, |#eta| < 2.5, ^{}d_{0} < 3.5 cm" # Phase0
+    elif phase == "Phase2" :
+        tptext = "p_{T} > 0.9 GeV, |#eta| < 4.0, ^{}d_{0} < 2.5 cm" # Phase2
+
     effbox = PlotTextBox(xmin, None, xmax, 0.31, transparent=False)
     effbox.addText("t#bar{t} event tracks%s"%putext)
-    effbox.addText("p_{T} > 0.9 GeV, |#eta| < 2.5, ^{}d_{0} < 3.5 cm")
+    effbox.addText(tptext)
 
     fakebox = PlotTextBox(xmin, None, xmax-0.04, 0.85, transparent=False)
     fakebox.addText("t#bar{t} event tracks%s"%putext)
@@ -600,7 +652,13 @@ def plotEffAndFake(files, prefix, pileup, hasPU70=False, hasCA=False):
 
     # eta
     effbox_eta = effbox.clone()
-    effbox_eta.replaceText(1, "p_{T} > 0.9 GeV, ^{}d_{0} < 3.5 cm")
+    tptext = ""
+    if phase == "Phase1" or phase == "Phase2" :
+        tptext = "p_{T} > 0.9 GeV, ^{}d_{0} < 2.5 cm" # Phase1
+    elif phase == "Phase0" :
+        tptext = "p_{T} > 0.9 GeV, ^{}d_{0} < 3.5 cm" # Phase0
+
+    effbox_eta.replaceText(1, tptext)
     plot = Plot(files.getHistos(folder_eff+"effic"), files.getLegends(), files.getStyles())
     _common = {
         "xtitle": "Simulated track #eta",
@@ -631,7 +689,15 @@ def plotEffAndFake(files, prefix, pileup, hasPU70=False, hasCA=False):
 
     # pT
     effbox_pt = effbox.clone()
-    effbox_pt.replaceText(1, "|#eta| < 2.5, ^{}d_{0} < 3.5 cm")
+    tptext = ""
+    if phase == "Phase1" :
+        tptext = "|#eta| < 3.0, ^{}d_{0} < 2.5 cm" # Phase1
+    elif phase == "Phase0" :
+        tptext = "|#eta| < 2.5, ^{}d_{0} < 3.5 cm" # Phase0
+    elif phase == "Phase2" :
+        tptext = "|#eta| < 4.0, ^{}d_{0} < 2.5 cm" # Phase2
+
+    effbox_pt.replaceText(1, tptext)
     effbox_pt.move(dx=0.05)
     fakebox_pt = fakebox.clone()
     fakebox_pt.removeText(1)
@@ -648,6 +714,8 @@ def plotEffAndFake(files, prefix, pileup, hasPU70=False, hasCA=False):
         _common["legendDx"] -= 0.05
     drawPlot(prefix+"_efficiency_pt", plot, ytitle="Tracking efficiency", **_common)
                
+    fakebox_pt = fakebox.clone()
+    fakebox_pt.removeText(1)
     _common["xtitle"] = "Track p_{T} (GeV)"
     _common["ymin"] = 0
     _common["ymax"] = 0.6
@@ -670,7 +738,14 @@ def plotEffAndFake(files, prefix, pileup, hasPU70=False, hasCA=False):
     # r
     effbox_r = effbox.clone()
     effbox_r.move(dy=0.6)
-    effbox_r.replaceText(1, "p_{T} > 0.9 GeV, |#eta| < 2.5")
+    tptext = ""
+    if phase == "Phase1" :
+        tptext = "p_{T} > 0.9 GeV, |#eta| < 3.0" # Phase1
+    elif phase == "Phase0" :
+        tptext = "p_{T} > 0.9 GeV, |#eta| < 2.5" # Phase0
+    elif phase == "Phase2" :
+        tptext = "p_{T} > 0.9 GeV, |#eta| < 4.0" # Phase2
+    effbox_r.replaceText(1, tptext)
     fakebox_r = fakebox.clone()
     fakebox_r.move(dy=-0.55, dx=0.1)
     plot = Plot(files.getHistos(folder_eff+"effic_vs_vertpos"), files.getLegends(), files.getStyles())
@@ -731,7 +806,7 @@ def plotEffAndFake(files, prefix, pileup, hasPU70=False, hasCA=False):
 ################################################################################
 ################################################################################
 ################################################################################
-def plotColoredEff(phase1file, prefix, pileup):
+def plotColoredEff(phase1file, prefix, pileup, phasae = "Phase1"):
     #folder_track = "DQMData/Run 1/Tracking/Run summary/Track/cutsReco%s_trackingParticleRecoAsssociation/"
     #folder_track = "DQMData/Run 1/Tracking/Run summary/Track/cutsReco%sHp_trackingParticleRecoAsssociation/"
     folder_track = "DQMData/Run 1/Tracking/Run summary/Track/cutsReco%sByOriginalAlgoHp_trackingParticleRecoAsssociation/"
@@ -757,16 +832,31 @@ def plotColoredEff(phase1file, prefix, pileup):
     if pileup is not None:
         putext = " (%s)" % pileup
 
+    tptext = ""
+    if phase == "Phase1" :
+        tptext = "p_{T} > 0.9 GeV, |#eta| < 3.0, ^{}d_{0} < 2.5 cm" # Phase1
+    elif phase == "Phase0" :
+        tptext = "p_{T} > 0.9 GeV, |#eta| < 2.5, ^{}d_{0} < 3.5 cm" # Phase0
+    elif phase == "Phase2" :
+        tptext = "p_{T} > 0.9 GeV, |#eta| < 4.0, ^{}d_{0} < 2.5 cm" # Phase2
+    
     xmin = 0.33
     xmax = 0.87
     legendDw = 0
     effbox = PlotTextBox(xmin, None, xmax, 0.31, transparent=True)
     effbox.addText("t#bar{t} event tracks%s"%putext)
-    effbox.addText("p_{T} > 0.9 GeV, |#eta| < 2.5, ^{}d_{0} < 3.5 cm")
+    effbox.addText(tptext)
 
     # pt
     effbox_pt = effbox.clone()
-    effbox_pt.replaceText(1, "|#eta| < 2.5, ^{}d_{0} < 3.5 cm")
+    tptext = ""
+    if phase == "Phase1" :
+        tptext = "|#eta| < 3.0, ^{}d_{0} < 2.5 cm" # Phase1
+    elif phase == "Phase0" :
+        tptext = "|#eta| < 2.5, ^{}d_{0} < 3.5 cm" # Phase0
+    elif phase == "Phase2" :
+        tptext = "|#eta| < 4.0, ^{}d_{0} < 2.5 cm" # Phase2
+    effbox_pt.replaceText(1, tptext)
     effbox_pt.move(dx=0.06, dy=-0.02)
 #    effbox_pt.move(dx=-0.13, dy=0.6)
     plot = PlotStack()
@@ -791,8 +881,14 @@ def plotColoredEff(phase1file, prefix, pileup):
     
 
     # eta
-    effbox_eta = effbox.clone()
-    effbox_eta.replaceText(1, "p_{T} > 0.9 GeV, ^{}d_{0} < 3.5 cm")
+    effbox_eta = effbox.clone() 
+    tptext = ""
+    if phase == "Phase1" or phase == "Phase2" :
+        tptext = "p_{T} > 0.9 GeV, ^{}d_{0} < 2.5 cm" # Phase1
+    elif phase == "Phase0" :
+        tptext = "p_{T} > 0.9 GeV, ^{}d_{0} < 3.5 cm" # Phase0
+
+    effbox_eta.replaceText(1, tptext)
     effbox_eta.move(dx=0.06, dy=-0.02)
 #    effbox_pt.move(dx=-0.13, dy=0.6)
     plot = PlotStack()
@@ -818,8 +914,16 @@ def plotColoredEff(phase1file, prefix, pileup):
     effbox_r = effbox.clone()
     #effbox_r.replaceText(1, "p_{T} > 0.9 GeV,")
     effbox_r.removeText(1)
-    effbox_r.addText("p_{T} > 0.9 GeV,", yspace=0.01)
-    effbox_r.addText("|#eta| < 2.5", yspace=0.01)
+    tptext = "p_{T} > 0.9 GeV"
+    effbox_r.addText(tptext, yspace=0.01)
+    tptext = ""
+    if phase == "Phase1" :
+        tptext = "|#eta| < 3.0" # Phase1
+    elif phase == "Phase0" :
+        tptext = "|#eta| < 2.5" # Phase0
+    elif phase == "Phase2" :
+        tptext = "|#eta| < 4.0" # Phase2
+    effbox_r.addText(tptext, yspace=0.01)
     effbox_r.transparent = False
     effbox_r.move(dx=-0.1, dy=0.6)
     _common = {
@@ -846,6 +950,221 @@ def plotColoredEff(phase1file, prefix, pileup):
         plot.add(eff, leg)
 
     drawPlot(prefix+"_efficiency_r_cum", plot, ytitle="Tracking efficiency", **_common)
+
+################################################################################
+################################################################################
+################################################################################
+### comparison among different directories, exploiting the THStack functionality
+# mainDirecotry = "DQMData/Run 1/HLT/Run summary/Tracking/ValidationWRTtp/%_hltAssociatorByHits/"
+# subDirectories = [
+#     "hltIterL3MuonPixel", # original regional pixel tracks collection
+#     "hltIterL3MuonPixelFromRegionalViaRegion", # closure test (original regional pixel tracks filtered by ROI)
+#     "hltIterL3MuonPixelFromGlobalViaRegion", # target regional pixel tracks collection built by filtering in the ROIs the global pixel tracks
+# ]
+def plotEffAndFake(thefile, mainDirectory, subDirectories, legendLabels, styleList, prefix, pileup, phase = "Phase1", postfix = "_hltAssociatorByHits"):
+
+    mainDir = "DQMData/Run 1/HLT/Run summary/Tracking/ValidationWRTtp/"
+    eff_h  = thefile.Get(mainDir + "effic_vs_coll" )
+    fake_h = thefile.Get(mainDir + "fakerate_vs_coll")
+    
+    eff_d  = plotting._th1ToOrderedDict(eff_h)
+    fake_d = plotting._th1ToOrderedDict(fake_h)
+
+    for sb in zip(subDirectories):
+        track_folder = sb
+        key = sb[0]
+        if key not in eff_d.keys() :
+            key = sb[0]+"Tracks"
+        if key not in eff_d.keys() :
+            key = sb[0].replace("Tracks","")
+            key = key.replace("Pixel","PixelTracks")
+#        print(key)
+        if key not in eff_d.keys() :
+            print(sb[0],"is not in the list of collections. They are:",eff_d.keys())
+        else:
+            print(key)
+            print("Efficiency", eff_d[key])
+            print("Fake rate ", fake_d[key])
+
+    mainDirectory = mainDir + "%s" + postfix + "/"
+
+    putext = ""
+    if pileup is not None:
+        putext = " (%s)" % pileup
+
+    tptext = ""  ### IS IT THE CASE ?
+    if phase == "Phase1" :
+        tptext = "p_{T} > 0.9 GeV, |#eta| < 3.0, ^{}d_{0} < 2.5 cm" # Phase1
+    elif phase == "Phase0" :
+        tptext = "p_{T} > 0.9 GeV, |#eta| < 2.5, ^{}d_{0} < 3.5 cm" # Phase0
+    elif phase == "Phase2" :
+        tptext = "p_{T} > 0.9 GeV, |#eta| < 4.0, ^{}d_{0} < 2.5 cm" # Phase2
+    
+    xmin = 0.33
+    xmax = 0.87
+    legendDw = 0
+    effbox = PlotTextBox(xmin, None, xmax, 0.31, transparent=True)
+    effbox.addText("t#bar{t} event tracks%s"%putext)
+    effbox.addText(tptext)
+
+    fakebox = PlotTextBox(xmin, None, xmax-0.04, 0.85, transparent=False)
+    fakebox.addText("t#bar{t} event tracks%s"%putext)
+    fakebox.addText("p_{T} > 0.9 GeV")
+
+    # pt
+    effbox_pt = effbox.clone()
+    tptext = ""  ### IS IT THE CASE ?
+    if phase == "Phase1" :
+        tptext = "|#eta| < 3.0, ^{}d_{0} < 2.5 cm" # Phase1
+    elif phase == "Phase0" :
+        tptext = "|#eta| < 2.5, ^{}d_{0} < 3.5 cm" # Phase0
+    elif phase == "Phase2" :
+        tptext = "|#eta| < 4.0, ^{}d_{0} < 2.5 cm" # Phase2    
+    effbox_pt.replaceText(1, tptext)
+    effbox_pt.move(dx=0.06, dy=-0.02)
+#    effbox_pt.move(dx=-0.13, dy=0.6)
+    plot = PlotStack()
+    for sb, leg, st in zip(subDirectories, legendLabels, styleList):
+        track_folder = sb
+        hname = mainDirectory%track_folder + "efficPt"
+#        print(hname)
+        h = thefile.Get(hname)
+        if not h:
+            raise Exception("Did not find %s from %s" % (hname, thefile.GetName()))
+        h.SetLineColor(st[0])
+        h.SetMarkerColor(st[0])
+        h.SetMarkerStyle(st[1])
+        plot.add(h, leg)
+    _common = {
+        "xtitle": "Simulated track p_{T} (GeV)",
+        "xmin": 1e-1, "xmax": 1e2, "ymin": 0, "ymax": 1,
+        "xlog": True,
+        "legendDx": -0.13, "legendDy": -0.24, "legendDw": legendDw, "legendDh": 0.23,
+        "legendTransparent": True,
+        "customise": lambda: effbox_pt.Draw(),
+        "drawOpt": "PE NOSTACK",
+        "ratio" : True, "ratioYmin" : 0.5, "ratioYmax" : 1,
+    }
+    drawPlot(prefix+"_efficiency_pt", plot, ytitle="Tracking efficiency", **_common)
+    
+    plot = PlotStack()
+    for sb, leg, st in zip(subDirectories, legendLabels, styleList):
+        track_folder = sb
+        hname = mainDirectory%track_folder + "fakeratePt"
+#        print(hname)
+        h = thefile.Get(hname)
+        if not h:
+            raise Exception("Did not find %s from %s" % (hname, thefile.GetName()))
+        h.SetLineColor(st[0])
+        h.SetMarkerColor(st[0])
+        h.SetMarkerStyle(st[1])
+        plot.add(h, leg)
+
+    fakebox_pt = fakebox.clone()
+    fakebox_pt.removeText(1)
+    _common["xtitle"] = "Track p_{T} (GeV)"
+    _common["ymin"] = 0
+    _common["ymax"] = 0.6
+    _common["legendDy"] = -0.2
+    _common["customise"] = lambda: fakebox_pt.Draw()
+    _common["ratioYmax"] = 2.
+    drawPlot(prefix+"_fakerate_pt", plot, ytitle="Tracking fake rate", **_common)
+
+    # eta
+    effbox_eta = effbox.clone()
+    tptext = ""  ### IS IT THE CASE ?
+    if phase == "Phase1" or phase == "Phase2" :
+        tptext = "p_{T} > 0.9 GeV, ^{}d_{0} < 2.5 cm" # Phase1
+    elif phase == "Phase0" :
+        tptext = "p_{T} > 0.9 GeV, ^{}d_{0} < 3.5 cm" # Phase0
+    effbox_eta.replaceText(1, tptext)
+    effbox_eta.move(dx=0.06, dy=-0.02)
+#    effbox_pt.move(dx=-0.13, dy=0.6)
+    plot = PlotStack()
+    for sb, leg, st in zip(subDirectories, legendLabels, styleList):
+        track_folder = sb
+        hname = mainDirectory%track_folder + "effic"
+        h = thefile.Get(hname)
+        if not h:
+            raise Exception("Did not find %s from %s" % (hname, thefile.GetName()))
+        h.SetLineColor(st[0])
+        h.SetMarkerColor(st[0])
+        h.SetMarkerStyle(st[1])
+        plot.add(h, leg)
+    _common = {
+        "xtitle": "Simulated track #eta",
+        "xmin": -3, "xmax": 3, "ymin": 0, "ymax": 1,
+        "legendDx": -0.15, "legendDy": -0.24, "legendDw": legendDw, "legendDh": 0.23,
+        "legendTransparent": True,
+        "customise": lambda: effbox_eta.Draw(),
+        "drawOpt": "PE NOSTACK",
+        "ratio" : True, "ratioYmin" : 0.5, "ratioYmax" : 1,
+    }
+    drawPlot(prefix+"_efficiency_eta", plot, ytitle="Tracking efficiency", **_common)
+    
+    plot = PlotStack()
+    for sb, leg, st in zip(subDirectories, legendLabels, styleList):
+        track_folder = sb
+        hname = mainDirectory%track_folder + "fakerate"
+        h = thefile.Get(hname)
+        if not h:
+            raise Exception("Did not find %s from %s" % (hname, thefile.GetName()))
+        h.SetLineColor(st[0])
+        h.SetMarkerColor(st[0])
+        h.SetMarkerStyle(st[1])
+        plot.add(h, leg)
+
+    _common["xtitle"] = "Track #eta"
+    _common["ymin"] = 0
+    _common["ymax"] = 0.2
+    _common["legendDy"] = -0.2
+    _common["customise"] = lambda: fakebox.Draw()
+    _common["ratioYmax"] = 2.
+    drawPlot(prefix+"_fakerate_eta", plot, ytitle="Tracking fake rate", **_common)
+
+    # r
+    effbox_r = effbox.clone()
+    effbox_r.removeText(1)
+    tptext = "p_{T} > 0.9 GeV"
+    effbox_r.addText(tptext, yspace=0.01)
+    tptext = ""  ### IS IT THE CASE ?
+    if phase == "Phase1" :
+        tptext = "p_{T} > 0.9 GeV, |#eta| < 3.0, ^{}d_{0} < 2.5 cm" # Phase1
+    elif phase == "Phase0" :
+        tptext = "p_{T} > 0.9 GeV, |#eta| < 2.5, ^{}d_{0} < 3.5 cm" # Phase0
+    elif phase == "Phase2" :
+        tptext = "p_{T} > 0.9 GeV, |#eta| < 4.0, ^{}d_{0} < 2.5 cm" # Phase2
+    
+    effbox_r.addText(tptext, yspace=0.01)
+    effbox_r.transparent = False
+    effbox_r.move(dx=-0.1, dy=0.6)
+    _common = {
+        "xtitle": "Sim. track prod. vertex radius (cm)",
+        "xmin": 0, "xmax": 60, "ymin": 0, "ymax": 1.2,
+        "legendDx": 0.02, "legendDy": -0.07, "legendDw": legendDw, "legendDh": 0.23,
+#        "legendDx": -0.3, "legendDy": -0.12, "legendDw": legendDw+0.33, "legendDh": 0.05,
+#        "legendColumns": 2,
+#        "legendTransparent": True,
+        "customiseBeforeLegend": lambda: effbox_r.Draw(),
+        "drawOpt": "PE NOSTACK",
+        "ratio" : True, "ratioYmin" : 0.5, "ratioYmax" : 1
+    }
+    plot = PlotStack()
+    for sb, leg, st in zip(subDirectories, legendLabels, styleList):
+        track_folder = sb
+        #hname = mainDirectory%sb + "effic_vs_vertpos"
+        #h = thefile.Get(hname)
+        #if not h:
+        #    raise Exception("Did not find %s from %s" % (hname, thefile.GetName()))
+        num_name = mainDirectory%track_folder + "num_assoc(simToReco)_vertpos"
+        denom_name = mainDirectory%track_folder + "num_simul_vertpos"
+        eff = calculateEfficiency(thefile, num_name, denom_name, rebin=2)
+        eff.SetLineColor(st[0])
+        h.SetMarkerColor(st[0])
+        h.SetMarkerStyle(st[1])
+        plot.add(eff, leg)
+
+#    drawPlot(prefix+"_efficiency_r", plot, ytitle="Tracking efficiency", **_common)
 
 ################################################################################
 ################################################################################
@@ -1413,18 +1732,19 @@ def drawPlot(name, plot, xmin=None, ymin=0, xmax=None, ymax=None, xlog=False, yl
         ymax = 1.1*plot.getYmax()
 
     bounds = (xmin, ymin, xmax, ymax)
-    args = {"nrows": 1,
-            "zmax": None}
+#    args = {"nrows": 1,
+#            "zmax": None}
+    args = {"nrows": 1}
     if xbinlabels is not None:
         args["xbinlabels"] = xbinlabels
         args["xbinlabelsize"] = xbinlabelsize
         args["xbinlabeloption"] = xbinlabeloption
     if ratio:
         ratioBounds = (xmin, ratioYmin, xmax, ratioYmax)
-        frame = plotting.FrameRatio(canv, bounds, ratioBounds, ratioFactor, **args)
+        frame = plotting.FrameRatio(canv, bounds, None, ratioBounds, ratioFactor, **args)
         frame._frameRatio.GetYaxis().SetLabelSize(0.12)
     else:
-        frame = plotting.Frame(canv, bounds, **args)
+        frame = plotting.Frame(canv, bounds, None, **args)
 
     if xtitle is not None:
         frame.setXTitle(xtitle)
