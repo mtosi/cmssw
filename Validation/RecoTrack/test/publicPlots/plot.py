@@ -1291,6 +1291,14 @@ def plotResol(files, prefix, pileup, hasPU70=False):
     plot = Plot(files.getHistos(folder_track+"ptres_vs_pt_Sigma"), files.getLegends(), files.getStyles())
     drawPlot(prefix+"_resolution_pt_pt", plot, ytitle="p_{T} resolution / p_{T}", **_common)
 
+    # eta
+#    plot = Plot(files.getHistos(folder_track+"etares_vs_pt_Sigma"), files.getLegends(), files.getStyles())
+#    drawPlot(prefix+"_resolution_eta_pt", plot, ytitle="#eta resolution", **_common)
+
+    # phi
+    plot = Plot(files.getHistos(folder_track+"phires_vs_pt_Sigma"), files.getLegends(), files.getStyles())
+    drawPlot(prefix+"_resolution_phi_pt", plot, ytitle="#phi resolution", **_common)
+
     # pt^2 for Marco
     plot = Plot(files.getHistos(folder_track+"ptres_vs_pt_Sigma"), files.getLegends(), files.getStyles())
     new = []
@@ -1346,6 +1354,14 @@ def plotResol(files, prefix, pileup, hasPU70=False):
 
     plot = Plot(files.getHistos(folder_track+"ptres_vs_phi_Sigma"), files.getLegends(), files.getStyles())
     drawPlot(prefix+"_resolution_pt_phi", plot, ytitle="p_{T} resolution / p_{T}", **_common)
+
+    # eta
+    plot = Plot(files.getHistos(folder_track+"etares_vs_eta_Sigma"), files.getLegends(), files.getStyles())
+    drawPlot(prefix+"_resolution_eta_eta", plot, ytitle="#eta resolution", **_common)
+
+    # phi
+    plot = Plot(files.getHistos(folder_track+"phires_vs_eta_Sigma"), files.getLegends(), files.getStyles())
+    drawPlot(prefix+"_resolution_phi_eta", plot, ytitle="#phi resolution", **_common)
 
     # vertex x
     vertbox.move(dx=0.15,dy=0.05)
